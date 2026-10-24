@@ -7,7 +7,7 @@
  *
  * Options:
  *   --wp-path=<path>       WordPress 根目录路径 (默认自动从当前目录或父级向上探测)
- *   --industry=<archetype> 工业原型预设: solar_charging | smart_board | outdoor_lcd | video_wall | interactive_table | kiosk | touch_screen | stretched_bar | lighting | wear_parts | battery | generic
+ *   --industry=<archetype> 工业原型预设: medical_aesthetic | interactive_projection | smart_board | retail_signage | outdoor_lcd | video_wall | interactive_table | solar_charging | kiosk | touch_screen | stretched_bar | lighting | wear_parts | battery | generic
  *   --corpus=<file.json>   自定义追问表单 JSON 文件 (覆盖 industry 预设)
  *   --feishu=<url>         飞书机器人 Webhook 地址
  *   --secret=<secret>      飞书机器人签名密钥 (选填)
@@ -56,8 +56,11 @@ if (isset($options['help'])) {
   --plugin-src=<目录>    指定本地插件代码源目录 (若指定则直接从该目录同步覆盖，秒级就位)
   --update               强制重新拉取最新版本覆盖现有插件
   --industry=<行业>      注入行业专属 7 步提问预设 (严格包含首步 @ 邮箱门禁):
+                         • medical_aesthetic: 医美光电设备制造与高阶美容仪器 / RF微针抗衰 / 客制化机构设备代工
                          • smart_board   : 教学与会议智能平板一体机 / 交互白板 / IFPD (65"~98" 4K)
+                         • interactive_projection: 儿童室内互动体感设备 & AR 投影 (互动砸球/AR沙滩沙桌/蹦床滑梯/体感运动)
                          • retail_signage: 零售商用 Android 广告机与数字标牌 / 连锁店促销大屏 / 商超导览屏
+                         • touch_signage : 商用触控广告机 & 落地标牌 / 影院商超立式触控机 (LansenTouch / 泰语本土化)
                          • outdoor_lcd   : 户外高亮防水液晶屏 / 智慧公交站牌 / 户外广告机
                          • video_wall    : 液晶拼接屏电视墙 / 超窄边监控指挥大屏 / 拼接单元
                          • interactive_table: 智能触控茶几 / 会议触控桌 / 物体识别互动台
@@ -1178,6 +1181,259 @@ function get_archetype_questions($industry) {
                 ],
                 $base_volume
             ];
+        case 'interactive_projection':
+        case 'ar_projection':
+        case 'kids_playground':
+        case 'interactive_playground':
+            return [
+                [
+                    'id'               => 'name_email',
+                    'question'         => 'Hello, may I have your Name and Business Email?',
+                    'type'             => 'name_email',
+                    'required'         => true,
+                    'require_at_email' => true,
+                    'prompt_error'     => 'Please provide a valid business email containing "@" (e.g. name@company.com) so we can send the product catalog and factory quotation.',
+                    'placeholder'      => 'Your Name & Business Email with @...',
+                ],
+                $base_whatsapp,
+                [
+                    'id'          => 'interactive_game_type',
+                    'question'    => 'Which interactive projection game or attraction type are you looking for?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'Interactive Smash Ball Wall / Ball Pool (互动砸球/波波池投影墙)',
+                        'AR Interactive Sand Table / Sand Beach (AR 互动沙桌/魔法沙滩)',
+                        'Interactive Trampoline / Slide / Floor (互动蹦床/滑梯/地面互动)',
+                        'Interactive Sports Simulators: Soccer / Tennis (足球/网球/攀岩体感模拟)',
+                        'Draw Alive Magic Painting & Immersive Room (神笔画画/全息沉浸式教室)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Select game type or describe your play attraction...',
+                ],
+                [
+                    'id'          => 'hardware_package',
+                    'question'    => 'What hardware setup and supply mode do you prefer?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'Turnkey System: Projector + Host PC + Radar/Motion Sensor + Enclosure (整套全包交付)',
+                        'Sensor + Game Software + Host PC only (已有投影机，仅需体感套件+软件主机)',
+                        'Software License + 3D Games Package only (已有硬件，仅需正版互动软件与游戏库)',
+                        'Whole Park Custom Design with Balls / Pool Enclosure (整馆一站式定制含软包外框)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Select hardware package or specify your existing equipment...',
+                ],
+                [
+                    'id'          => 'projection_dimension',
+                    'question'    => 'What is your estimated projection area or wall/room dimension?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'Single Wall / Ground: 3m - 5m width (单台投影标准画面)',
+                        'Multi-Projector Splicing: 6m - 10m+ width (多机大画面融合拼接)',
+                        'Interactive Sand Table / Slide: 1.5m - 2.5m (沙桌/滑梯小型专用)',
+                        'Immersive 3-4 Sided 360° Room (全息沉浸式三折幕/四折幕空间)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'e.g. 4m wide x 2.5m high, or paste room CAD size...',
+                ],
+                [
+                    'id'          => 'game_customization',
+                    'question'    => 'Do you have specific game content or brand customization requirements?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'Standard 30-50+ HD Games Library (含出厂30-50款双语益智竞技游戏库)',
+                        'Custom Brand Logo / Holiday Theme Integration (植入品牌Logo/节日定制)',
+                        'New Customized Game Development (全新专属玩法定制开发)',
+                        'Regular Remote Game Update Service (支持后续远程OTA游戏升级)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Select option or describe your custom theme...',
+                ],
+                $base_volume
+            ];
+        case 'touch_signage':
+        case 'thai_signage':
+        case 'lansentouch':
+        case 'thai_touch':
+            return [
+                [
+                    'id'               => 'name_email',
+                    'question'         => 'สวัสดีครับ! ขอทราบชื่อและอีเมลสำหรับติดต่อธุรกิจ (Business Email) ของท่านได้ไหมครับ?',
+                    'type'             => 'name_email',
+                    'required'         => true,
+                    'require_at_email' => true,
+                    'prompt_error'     => 'กรุณากรอกอีเมลสำหรับธุรกิจที่ถูกต้องและมีเครื่องหมาย "@" (เช่น name@company.com) เพื่อให้เราจัดส่งข้อมูลและใบเสนอราคาครับ',
+                    'placeholder'      => 'ชื่อและอีเมลธุรกิจของคุณ (มี @)...',
+                ],
+                [
+                    'id'          => 'whatsapp_contact',
+                    'question'    => 'ท่านสะดวกติดต่อผ่าน WhatsApp หรือ WeChat เพื่อรับข้อมูลและใบเสนอราคาอย่างรวดเร็วไหมครับ?',
+                    'type'        => 'optional_text',
+                    'options'     => [
+                        '📲 ติดต่อทาง WhatsApp (+8618098949445)',
+                        '💬 ติดต่อทาง WeChat (ZXT18098949445)',
+                        '✉️ สะดวกติดต่อทางอีเมลเท่านั้น (Email Only)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'กรอกเบอร์โทร / WhatsApp / LINE หรือเลือกตัวเลือกด้านบน...',
+                ],
+                [
+                    'id'          => 'installation_structure',
+                    'question'    => 'ท่านต้องการจอโฆษณาหรือตู้คีออสในรูปแบบโครงสร้างและการติดตั้งใด?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'ตู้คีออสตั้งพื้น ทรงมาตรฐาน (Floor-standing Totem สำหรับห้างสรรพสินค้า/โรงภาพยนตร์)',
+                        'ป้ายโฆษณาดิจิทัลแบบแขวน/ติดผนัง (Wall-mounted Commercial Display)',
+                        'ตู้สั่งอาหาร/ชำระเงินบริการตนเอง (Self-Service Ordering / Payment Kiosk)',
+                        'จอสัมผัสแบบฝังเคาน์เตอร์ / Open Frame (Flush Mount / Control Cabinet)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'เลือกรูปแบบด้านบน หรือระบุลักษณะพื้นที่ติดตั้งที่ต้องการ...',
+                ],
+                [
+                    'id'          => 'touch_tech',
+                    'question'    => 'ท่านต้องการระบบสัมผัส (Touch Screen) และคุณสมบัติหน้าจอแบบใด?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'สัมผัส Capacitive PCAP 10-Point (ตอบสนองไว ผิวเรียบเสมอกระจก)',
+                        'สัมผัสอินฟราเรด IR Multi-Touch (ทนทาน เหมาะสำหรับพื้นที่สาธารณะ)',
+                        'กระจกนิรภัยป้องกันแสงสะท้อน AG Glass (Anti-Glare คมชัดสูง)',
+                        'จอแสดงผลโฆษณาอย่างเดียว ไม่ต้องสัมผัส (Non-touch Display Only)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'เลือกระบบสัมผัส หรือระบุความต้องการเพิ่มเติม...',
+                ],
+                [
+                    'id'          => 'screen_size',
+                    'question'    => 'ท่านสนใจหน้าจอขนาดกี่นิ้ว สำหรับโครงการของท่าน?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        '43 นิ้ว / 49 นิ้ว (ขนาดยอดนิยมสำหรับจุดบริการข้อมูลและโฆษณาในห้าง)',
+                        '55 นิ้ว / 65 นิ้ว (ขนาดใหญ่สำหรับโรงภาพยนตร์ ห้างสรรพสินค้า และโชว์รูม)',
+                        '21.5 นิ้ว / 27 นิ้ว / 32 นิ้ว (ขนาดกะทัดรัด สำหรับตู้สั่งอาหารและชำระเงิน)',
+                        '75 นิ้ว - 86 นิ้วขึ้นไป (จอยักษ์ระดับพรีเมียม / Interactive Presentation)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'เลือกขนาดหน้าจอ หรือวางลิงก์สินค้าที่สนใจ...',
+                ],
+                [
+                    'id'          => 'system_player',
+                    'question'    => 'ท่านต้องการระบบปฏิบัติการและสเปกเครื่องควบคุม (Player OS) แบบใด?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'ระบบ Android (พร้อม WiFi/LAN สำหรับระบบ CMS จัดการโฆษณาออนไลน์)',
+                        'ระบบ Windows 10/11 Pro (Intel Core i3/i5/i7 สำหรับโปรแกรมซอฟต์แวร์เฉพาะ)',
+                        'Dual OS (รองรับทั้ง Android และ Windows สลับใช้งานได้)',
+                        'เฉพาะจอ Monitor (มีพอร์ต HDMI + USB Touch สำหรับต่อคอมพิวเตอร์ภายนอก)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'ระบุระบบปฏิบัติการ, CPU, RAM หรือโปรแกรมที่ต้องการใช้งาน...',
+                ],
+                [
+                    'id'          => 'project_volume',
+                    'question'    => 'จำนวนที่ท่านคาดว่าจะสั่งซื้อและระยะเวลาของโครงการเป็นอย่างไรครับ?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'สั่งซื้อเครื่องตัวอย่างทดสอบ (Prototype 1 - 2 เครื่อง)',
+                        'สั่งซื้อล็อตทดลอง (Trial Batch 5 - 20 เครื่อง)',
+                        'สั่งซื้อจำนวนมาก / โครงการใหญ่ (Mass Production > 50 เครื่อง)',
+                        'อยู่ในขั้นตอนประมูลโครงการ / ร่าง TOR (ต้องการสเปกและราคาประเมิน)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'เช่น ต้องการ 10 เครื่องภายใน 1-2 เดือน...',
+                ],
+            ];
+        case 'medical_aesthetic':
+        case 'aesthetic_device':
+        case 'aesthetic':
+        case 'regenerative_aesthetic':
+            return [
+                [
+                    'id'               => 'name_email',
+                    'question'         => 'Hello, may I have your Name and Business Email?',
+                    'type'             => 'name_email',
+                    'required'         => true,
+                    'require_at_email' => true,
+                    'prompt_error'     => 'Please provide a valid business email containing "@" (e.g. dr.name@clinic.com or name@company.com).',
+                    'placeholder'      => 'Your Name & Business Email with @...',
+                ],
+                [
+                    'id'          => 'whatsapp_contact',
+                    'question'    => 'Do you use WhatsApp or WeChat for instant clinical specifications and wholesale quotation?',
+                    'type'        => 'optional_text',
+                    'options'     => [
+                        '📲 Chat on WhatsApp (+8618098949445)',
+                        'Prefer Email only ✉️'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Enter your WhatsApp/Phone or select above...',
+                ],
+                [
+                    'id'          => 'device_type',
+                    'question'    => 'Which aesthetic device modality or regenerative system are you looking for?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'RF Microneedling (Dermal penetration for PRP/PRF/Exosome)',
+                        'Fractional Anti-Aging & Skin Tightening Device',
+                        'Medical Spa Multi-Function Platform / Trolley Unit',
+                        'Custom Aesthetic Equipment OEM / ODM Manufacturing'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Select modality or describe desired treatment system...',
+                ],
+                [
+                    'id'          => 'dermal_technology',
+                    'question'    => 'What dermal penetration technology and energy specifications do you require?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'RF Microneedling + PRP / PRF / Exosome Delivery',
+                        'Adjustable Depth RF (0.5mm - 4.0mm targeted penetration)',
+                        'Insulated & Non-Insulated Needle Cartridges (25/49/64 pins)',
+                        'Cryo Cold Soothing Hammer + Negative Pressure Vacuum'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Specify penetration depth, RF frequency, or cartridge requirements...',
+                ],
+                [
+                    'id'          => 'customization_oem',
+                    'question'    => 'What level of OEM/ODM customization or branding do you need for your clinics?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'Private Label (Custom chassis color, silk-screen logo & casing)',
+                        'Custom Software UI (Logo on startup screen, localized languages)',
+                        'Complete Machine + Clinical Trolley Stand Turnkey Solution',
+                        'Standard Factory Model (Fast delivery / ready to test)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Describe OEM branding, software customization, or exterior design...',
+                ],
+                [
+                    'id'          => 'regulatory_market',
+                    'question'    => 'Which clinical certifications and target market standards are required?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'FDA Cleared / 510(k) Ready Standard',
+                        'CE Medical / ISO 13485 Certified Facility',
+                        'Standard CE & RoHS for Commercial Aesthetic Clinics',
+                        'OEM Technical File & Safety Compliance Support'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Specify regulatory certifications or voltage (110V/220V)...',
+                ],
+                [
+                    'id'          => 'project_volume',
+                    'question'    => 'What is your estimated order quantity and procurement timeline?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'Evaluation / 1-2 units clinic sample test',
+                        'Clinic & MedSpa batch (5 - 20 units)',
+                        'Distributor OEM batch (> 50 - 100 units)',
+                        'Custom Clinic Chain / Hospital Tender stage'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'e.g. 5 units needed for new clinics in 2 months...',
+                ]
+            ];
 
         default: // generic
             return [
@@ -1250,10 +1506,15 @@ if (!empty($options['welcome'])) {
     update_option('wpi_welcome_msg', trim($options['welcome']));
     echo "  \033[1;32m✓\033[0m 欢迎语设置为: " . esc_html($options['welcome']) . "\n";
 } else {
-    // 自动清除欢迎语中的 CAD 痕迹
-    $curr_welcome = get_option('wpi_welcome_msg', '');
-    if (empty($curr_welcome) || stripos($curr_welcome, 'CAD') !== false) {
-        update_option('wpi_welcome_msg', 'Hi! Looking for factory-direct wholesale prices or specifications for "{product_name}"?');
+    if (in_array($industry, ['touch_signage', 'thai_signage', 'lansentouch', 'thai_touch'])) {
+        update_option('wpi_welcome_msg', 'สวัสดีครับ! สนใจใบเสนอราคาส่งตรงจากโรงงานหรือสเปกของ "{product_name}" ใช่ไหมครับ?');
+        update_option('wpi_default_welcome_msg', 'สวัสดีครับ! ยินดีต้อนรับสู่ LansenTouch ผู้ผลิตจอสัมผัสและป้ายโฆษณาดิจิทัล มีอะไรให้เราช่วยดูแลโครงการของคุณวันนี้ครับ?');
+    } else {
+        // 自动清除欢迎语中的 CAD 痕迹
+        $curr_welcome = get_option('wpi_welcome_msg', '');
+        if (empty($curr_welcome) || stripos($curr_welcome, 'CAD') !== false) {
+            update_option('wpi_welcome_msg', 'Hi! Looking for factory-direct wholesale prices or specifications for "{product_name}"?');
+        }
     }
 }
 

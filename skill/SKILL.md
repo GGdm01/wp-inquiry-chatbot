@@ -71,7 +71,7 @@ php wp-content/plugins/wp-inquiry-chatbot/bin/wpi-quick-setup.php \
 
 **参数支持：**
 * `--plugin-src=<目录>`：直接指定本地/服务器上的插件代码源目录，直接同步覆盖生效。
-* `--industry`：`solar_charging` (太阳能光伏手机充电站/智慧光伏长椅/景区充电亭), `smart_board` (教学与会议智能平板一体机/交互白板), `outdoor_lcd` (户外高亮防水液晶屏/智慧公交站牌), `video_wall` (超窄边液晶拼接屏电视墙/监控指挥大屏), `interactive_table` (智能触控茶几/会议触控桌/展厅互动台), `kiosk` (自助终端整机), `touch_screen` (工业触控屏), `stretched_bar` (条形液晶屏), `lighting` (商业照明), `wear_parts` (机械耐磨件), `battery` (储能锂电), `generic` (工业通用)。
+* `--industry`：`interactive_projection` (儿童室内互动体感设备/AR投影/互动砸球/AR沙滩沙桌/蹦床滑梯), `solar_charging` (太阳能光伏手机充电站/智慧光伏长椅/景区充电亭), `smart_board` (教学与会议智能平板一体机/交互白板), `retail_signage` (商用数字标牌广告机), `outdoor_lcd` (户外高亮防水液晶屏/智慧公交站牌), `video_wall` (超窄边液晶拼接屏电视墙/监控指挥大屏), `interactive_table` (智能触控茶几/会议触控桌/展厅互动台), `kiosk` (自助终端整机), `touch_screen` (工业触控屏), `stretched_bar` (条形液晶屏), `lighting` (商业照明), `wear_parts` (机械耐磨件), `battery` (储能锂电), `generic` (工业通用)。
 * `--corpus=/path/to/custom.json`：直接指定自定义 7 步表单文件。
 * `--feishu` & `--secret`：飞书机器人 Webhook 与签名密钥。
 * `--test-feishu`：配置后立刻向外贸群推送交互卡片验证连通性。

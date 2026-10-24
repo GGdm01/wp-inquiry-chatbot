@@ -239,6 +239,10 @@ class WPI_Notifier {
         if (preg_match('/(hardware_package|supply_mode|projector_setup|turnkey|供货方案|硬件配置|成套交付)/i', $q_lower)) return '供货方案';
         if (preg_match('/(projection_dimension|projection_area|projection_size|投影面积|投影尺寸|投影画面)/i', $q_lower)) return '投影尺寸';
         if (preg_match('/(game_customization|game_content|game_library|custom_game|游戏内容|定制游戏|游戏库)/i', $q_lower)) return '游戏内容';
+        if (preg_match('/(device_type|modality|aesthetic|regenerative|仪器品类|设备品类|医美仪器)/i', $q_lower)) return '仪器品类';
+        if (preg_match('/(dermal|penetration|rf|microneedle|exosome|prp|prf|核心技术|能量技术|穿透技术)/i', $q_lower)) return '核心技术';
+        if (preg_match('/(customization_oem|private_label|oem_service|branding|代工定制|贴牌定制|外壳定制)/i', $q_lower)) return '代工定制';
+        if (preg_match('/(regulatory|compliance|iso13485|clinical_cert|认证资质|医疗认证)/i', $q_lower)) return '认证资质';
         if (preg_match('/(hologram|showcase|fan|oled|pyramid|全息|展柜|风扇)/i', $q_lower)) return '展示形态';
         if (preg_match('/(optical|tracking|lens|viewing|视角|光学|角度|追踪)/i', $q_lower)) return '光学视角';
         if (preg_match('/(scenario|classroom|conference|meeting|用途|场景)/i', $q_lower)) return '应用场景';
