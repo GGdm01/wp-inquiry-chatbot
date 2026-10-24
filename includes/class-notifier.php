@@ -237,7 +237,7 @@ class WPI_Notifier {
         $q_lower = strtolower(trim($q, " :：\t\n\r\0\x0B?？"));
         if (preg_match('/(hologram|showcase|fan|oled|pyramid|全息|展柜|风扇)/i', $q_lower)) return '展示形态';
         if (preg_match('/(optical|tracking|lens|viewing|视角|光学|角度|追踪)/i', $q_lower)) return '光学视角';
-        if (preg_match('/(scenario|application|classroom|conference|meeting|用途|场景)/i', $q_lower)) return '应用场景';
+        if (preg_match('/(scenario|classroom|conference|meeting|用途|场景)/i', $q_lower)) return '应用场景';
         if (preg_match('/(capacity|voltage|kwh|ampere|ah|容量|电压|千瓦时)/i', $q_lower)) return '系统容量';
         if (preg_match('/(inverter|bms|protocol|can|rs485|逆变|协议|通信)/i', $q_lower)) return '逆变通信';
         if (preg_match('/(cell|cert|certification|un38|msds|ul1973|电芯|认证)/i', $q_lower)) return '电芯认证';
@@ -263,7 +263,7 @@ class WPI_Notifier {
         if (preg_match('/(touch|触控|触摸)/i', $q_lower)) return '触控方式';
         if (preg_match('/(screen|size|dimension|尺寸)/i', $q_lower)) return '屏幕尺寸';
         if (preg_match('/(feature|peripheral|object|外设|功能)/i', $q_lower)) return '功能特性';
-        if (preg_match('/(player|cms|os|android|windows|系统|播放)/i', $q_lower)) return '主控系统';
+        if (preg_match('/(player|playback|cms|os|system|android|windows|系统|播放)/i', $q_lower)) return '主控系统';
         if (preg_match('/(processor|ram|hardware|configuration|配置|硬件)/i', $q_lower)) return '配置要求';
         if (preg_match('/(quantity|volume|pcs|批量|采购量|数量)/i', $q_lower)) return '预估批量';
         if (preg_match('/(specs|drawing|model|需求|图纸)/i', $q_lower)) return '需求类型';
