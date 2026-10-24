@@ -20,7 +20,7 @@
     color: var(--wpi-text);
 }
 /* Avoid overlapping with floating WhatsApp button if present */
-body:has(#zxtlcd-wa-float, #zxtlcd-wa-float-ds, .joinchat--right) .wpi-widget-container {
+body:has(#zxtlcd-wa-float, #zxtlcd-wa-float-ds, .joinchat--right, #ht-ctc-chat, .ht-ctc-chat) .wpi-widget-container {
     bottom: 90px;
 }
 
@@ -459,6 +459,9 @@ body:has(#zxtlcd-wa-float, #zxtlcd-wa-float-ds, .joinchat--right) .wpi-widget-co
     .wpi-widget-container {
         bottom: 16px;
         right: 16px;
+    }
+    body:has(#zxtlcd-wa-float, #zxtlcd-wa-float-ds, .joinchat--right, #ht-ctc-chat, .ht-ctc-chat) .wpi-widget-container {
+        bottom: 76px;
     }
     .wpi-chatbox {
         bottom: 70px;

@@ -119,9 +119,9 @@
             return;
         }
         const widgetContainer = document.getElementById('wpi-widget');
-        const bottomOverlap = document.getElementById('zxtlcd-wa-float') || document.getElementById('zxtlcd-wa-float-ds') || document.querySelector('.joinchat--right');
+        const bottomOverlap = document.getElementById('zxtlcd-wa-float') || document.getElementById('zxtlcd-wa-float-ds') || document.querySelector('.joinchat--right') || document.getElementById('ht-ctc-chat') || document.querySelector('.ht-ctc-chat');
         if (bottomOverlap && widgetContainer) {
-            widgetContainer.style.bottom = '90px';
+            widgetContainer.style.bottom = window.innerWidth <= 480 ? '76px' : '90px';
         }
         quickSubmitBar  = document.getElementById('wpi-quick-submit-bar');
         quickSubmitBtn  = document.getElementById('wpi-quick-submit-btn');
