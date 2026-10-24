@@ -1,17 +1,17 @@
 {
   "name": "WP Inquiry Chatbot",
   "slug": "wp-inquiry-chatbot",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "author": "GGdm01",
   "author_profile": "https://github.com/GGdm01",
   "homepage": "https://github.com/GGdm01/wp-inquiry-chatbot",
   "requires": "5.6",
   "tested": "6.7",
   "requires_php": "7.4",
-  "last_updated": "2026-10-24 14:30:00",
+  "last_updated": "2026-10-24 16:30:00",
   "download_url": "https://github.com/GGdm01/wp-inquiry-chatbot/archive/refs/heads/main.zip",
   "sections": {
     "description": "Lightweight, deterministic, ECV-style B2B inquiry & lead generation chatbot for WordPress. 100% conversion focused, direct email gate, zero LLM cost, instant notifications.",
-    "changelog": "<h4>1.4.4 (2026-10-24)</h4><ul><li>将业务问答语料预设收纳至机器人设置折叠抽屉中，避免在表单页误触。</li><li>新增「保存当前配置为站点默认预设」与「一键恢复自定义默认预设」快照机制。</li><li>支持全套语料库 JSON 完整文件导出备份与跨站导入恢复。</li></ul><h4>1.4.3</h4><ul><li>升级为交互式可视化表单流程与问答规则编辑器。</li><li>管理后台全界面深度纯简体中文汉化。</li></ul>"
+    "changelog": "<h4>1.4.5 (2026-10-24)</h4><ul><li>首步捕获邮箱后支持随时直接提交（输入栏常驻胶囊条 + 选项区内嵌快捷按钮）。</li><li>增加即时保存与定心丸通知（Contact details saved），打消客户被盘问的流失心理。</li><li>多题目支持轻量步骤指示器（Step X/N），降低填表认知负担。</li></ul><h4>1.4.4</h4><ul><li>将业务问答语料预设收纳至机器人设置折叠抽屉中，避免在表单页误触。</li><li>新增「保存当前配置为站点默认预设」与「一键恢复自定义默认预设」快照机制。</li><li>支持全套语料库 JSON 完整文件导出备份与跨站导入恢复。</li></ul><h4>1.4.3</h4><ul><li>升级为交互式可视化表单流程与问答规则编辑器。</li><li>管理后台全界面深度纯简体中文汉化。</li></ul>"
   }
 }

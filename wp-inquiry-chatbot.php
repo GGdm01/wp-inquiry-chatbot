@@ -3,7 +3,7 @@
  * Plugin Name: WP Inquiry Chatbot (ECV Style)
  * Plugin URI: https://github.com/GGdm01/wp-inquiry-chatbot
  * Description: Lightweight, deterministic, ECV-style B2B inquiry & lead generation chatbot for WordPress. Supports English/Chinese bilingual configuration, zero LLM cost, 100% conversion focused, context-aware product lead capture.
- * Version: 1.4.4
+ * Version: 1.4.5
  * Author: GGdm01
  * Text Domain: wp-inquiry-chatbot
  * Domain Path: /languages
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('WPI_VERSION', '1.4.4');
+define('WPI_VERSION', '1.4.5');
 define('WPI_PLUGIN_FILE', __FILE__);
 define('WPI_PATH', plugin_dir_path(__FILE__));
 define('WPI_URL', plugin_dir_url(__FILE__));
@@ -59,6 +59,7 @@ add_action('wp_enqueue_scripts', function () {
         'formQuestions'     => get_option('wpi_form_questions', WPI_Admin::get_default_form_questions()),
         'faqList'           => get_option('wpi_faq_list', WPI_Admin::get_default_faqs()),
         'whatsappNumber'    => get_option('wpi_whatsapp_number', ''),
+        'language'          => get_option('wpi_language', 'en'),
     ]);
 });
 
@@ -109,9 +110,21 @@ add_action('wp_footer', function () {
             <!-- Messages Stream -->
             <div id="wpi-messages" class="wpi-messages"></div>
 
+            <!-- Quick Submit Bar (Appears once contact is captured) -->
+            <div id="wpi-quick-submit-bar" class="wpi-quick-submit-bar" style="display:none;">
+                <button type="button" id="wpi-quick-submit-btn" class="wpi-quick-submit-btn">
+                    <span class="wpi-quick-submit-icon">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                        </svg>
+                    </span>
+                    <span class="wpi-quick-submit-text" id="wpi-quick-submit-text">Submit Inquiry Directly</span>
+                    <span class="wpi-quick-submit-tag" id="wpi-quick-submit-tag">I'm done</span>
+                </button>
+            </div>
+
             <!-- Action Chips Container (Quick Replies) -->
             <div id="wpi-actions" class="wpi-actions"></div>
-
             <!-- Input Area -->
             <div class="wpi-input-bar">
                 <input type="text" id="wpi-user-input" placeholder="Type WhatsApp, Email or question..." autocomplete="off">

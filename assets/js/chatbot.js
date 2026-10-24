@@ -18,24 +18,60 @@
     const isBrowserZh = (typeof navigator !== 'undefined' && navigator.language && navigator.language.toLowerCase().startsWith('zh'));
     const activeLang = (configuredLang === 'zh_CN' || (configuredLang === 'auto' && isBrowserZh)) ? 'zh' : 'en';
 
-    const i18n = (WPI_CONFIG.i18n && WPI_CONFIG.i18n[activeLang]) ? WPI_CONFIG.i18n[activeLang] : {
-        bot_name: 'Sales Specialist',
-        status_text: 'Online | Direct Factory Reply',
-        context_tag: 'Currently Viewing:',
-        input_placeholder: 'Type WhatsApp, Email or question...',
-        footer_note: 'Secured & Direct to Manufacturer',
-        close_title: 'Minimize',
-        launcher_aria: 'Open Inquiry Chat',
-        placeholder_default: 'Type your answer or click below...',
-        placeholder_email: 'Enter Name & Email with @...',
-        placeholder_notes: 'Type additional notes for our engineer...',
-        note_added: 'Note added to your inquiry.',
-        faq_follow_up: 'By the way, could you also help with our previous question:',
-        email_required_error: 'Please provide a valid business email containing "@" (e.g. name@company.com) so our engineer can send the specifications.',
-        email_test_error: 'Please provide a reachable business email address. Test accounts cannot receive official quotes and specifications.',
-        email_fallback: 'May I have your name and business Email with "@" so our engineer can send the specifications?',
-        lead_success_msg: 'Thank you! Our engineering and sales team will contact you shortly.'
+    const i18nDict = {
+        en: {
+            bot_name: 'Sales Specialist',
+            status_text: 'Online | Direct Factory Reply',
+            context_tag: 'Currently Viewing:',
+            input_placeholder: 'Type WhatsApp, Email or question...',
+            footer_note: 'Secured & Direct to Manufacturer',
+            close_title: 'Minimize',
+            launcher_aria: 'Open Inquiry Chat',
+            placeholder_default: 'Type your answer or click below...',
+            placeholder_email: 'Enter Name & Email with @...',
+            placeholder_notes: 'Type additional notes for our engineer...',
+            note_added: 'Note added to your inquiry.',
+            faq_follow_up: 'By the way, could you also help with our previous question:',
+            email_required_error: 'Please provide a valid business email containing "@" (e.g. name@company.com) so our engineer can send the specifications.',
+            email_test_error: 'Please provide a reachable business email address. Test accounts cannot receive official quotes and specifications.',
+            email_fallback: 'May I have your name and business Email with "@" so our engineer can send the specifications?',
+            lead_success_msg: 'Thank you! Our engineering and sales team will contact you shortly with the specifications and wholesale quotation.',
+            quick_submit_btn: 'Submit Inquiry Directly',
+            quick_submit_tag: "I'm done",
+            quick_submit_chip: 'Submit Now',
+            email_saved_notice: '<div class="wpi-notice-pill"><span class="wpi-check-icon">✓</span> <strong>Contact details saved!</strong> Answer a few quick options for an exact quote, or submit directly at any time.</div>',
+            step_badge: 'Step {current}/{total}',
+            wa_urgent_prompt: 'Need urgent response? Click below to chat directly with our engineer on WhatsApp:',
+            wa_btn_label: 'Chat on WhatsApp',
+        },
+        zh: {
+            bot_name: '业务与技术支持',
+            status_text: '在线 | 工厂直达响应',
+            context_tag: '当前咨询产品：',
+            input_placeholder: '输入 WhatsApp、微信、邮箱或咨询需求...',
+            footer_note: '隐私已加密保护 | 直通工厂工程部',
+            close_title: '最小化',
+            launcher_aria: '打开咨询窗口',
+            placeholder_default: '输入您的回答或点击下方选项...',
+            placeholder_email: '请输入联系人与带 @ 的业务邮箱...',
+            placeholder_notes: '可继续输入补充需求或技术要求...',
+            note_added: '补充说明已同步至您的询盘工单。',
+            faq_follow_up: '顺便请问，关于刚才的问题：',
+            email_required_error: '请提供包含“@”的真实有效业务邮箱（如 name@company.com），以便工程师为您发送图纸与出厂底价。',
+            email_test_error: '不接受测试或临时邮箱，请提供真实可用的业务邮箱以便发送正式规格书与报价。',
+            email_fallback: '请提供您的姓名和带“@”的业务邮箱，方便工程师发送出厂报价与规格书。',
+            lead_success_msg: '感谢您的垂询！我们的工程与销售团队将在2小时内通过邮件联系您，发送出厂报价与完整规格书。',
+            quick_submit_btn: '直接提交询盘',
+            quick_submit_tag: '已填好',
+            quick_submit_chip: '直接提交',
+            email_saved_notice: '<div class="wpi-notice-pill"><span class="wpi-check-icon">✓</span> <strong>联系方式已保存！</strong> 您可继续选择下方规格以便精准核算，或随时点击直接提交。</div>',
+            step_badge: '第 {current}/{total} 步',
+            wa_urgent_prompt: '如需加急对接，亦可直接通过 WhatsApp 联系技术经理：',
+            wa_btn_label: 'WhatsApp 即时沟通',
+        }
     };
+
+    const i18n = Object.assign({}, i18nDict[activeLang] || i18nDict.en, (WPI_CONFIG.i18n && WPI_CONFIG.i18n[activeLang]) ? WPI_CONFIG.i18n[activeLang] : {});
 
     // State Variables
     let isOpen = false;
@@ -59,6 +95,7 @@
 
     // DOM Elements
     let launcherBtn, chatBox, messagesContainer, actionsContainer, userInput, sendBtn, closeBtn, contextBanner, contextTitle;
+    let quickSubmitBar, quickSubmitBtn, quickSubmitText, quickSubmitTag;
 
     // Initialize on DOM ready
     if (document.readyState === 'loading') {
@@ -81,6 +118,13 @@
         if (!launcherBtn || !chatBox) {
             return;
         }
+        quickSubmitBar  = document.getElementById('wpi-quick-submit-bar');
+        quickSubmitBtn  = document.getElementById('wpi-quick-submit-btn');
+        quickSubmitText = document.getElementById('wpi-quick-submit-text');
+        quickSubmitTag  = document.getElementById('wpi-quick-submit-tag');
+
+        if (quickSubmitText && i18n.quick_submit_btn) quickSubmitText.innerText = i18n.quick_submit_btn;
+        if (quickSubmitTag && i18n.quick_submit_tag) quickSubmitTag.innerText = i18n.quick_submit_tag;
 
         // Apply dynamic i18n strings to DOM
         const statusTextEl = document.getElementById('wpi-status-text');
@@ -161,6 +205,56 @@
                 handleUserSend();
             }
         });
+
+        if (quickSubmitBtn) {
+            quickSubmitBtn.addEventListener('click', handleQuickSubmit);
+        }
+    }
+
+    function showQuickSubmitBar() {
+        if (quickSubmitBar && !flowCompleted) {
+            quickSubmitBar.style.display = 'flex';
+        }
+    }
+
+    function hideQuickSubmitBar() {
+        if (quickSubmitBar) {
+            quickSubmitBar.style.display = 'none';
+        }
+    }
+
+    function handleQuickSubmit() {
+        if (flowCompleted) {
+            return;
+        }
+
+        // Must have at least captured email or phone
+        if (!leadCaptured && !inquiryData.email && !inquiryData.phone) {
+            appendBotMessage(i18n.email_required_error);
+            userInput.placeholder = i18n.placeholder_email;
+            userInput.focus();
+            return;
+        }
+
+        flowCompleted = true;
+        hideQuickSubmitBar();
+        actionsContainer.innerHTML = '';
+
+        const successMsg = WPI_CONFIG.leadSuccessMsg || i18n.lead_success_msg;
+        appendBotMessage(successMsg);
+
+        // If WhatsApp number is configured, offer immediate 1-click wa.me chat
+        const waNum = (WPI_CONFIG.whatsappNumber || '').replace(/[^\d]/g, '');
+        if (waNum) {
+            const pTitle = currentProduct ? currentProduct.title : document.title.split(/[-–|]/)[0].trim();
+            const waText = 'Hello, I just submitted an inquiry for "' + pTitle + '" on your website (' + window.location.href + '). Please send quotation & specifications.';
+            const waUrl = 'https://wa.me/' + waNum + '?text=' + encodeURIComponent(waText);
+            const waPrompt = '<div class="wpi-wa-card"><p>' + (i18n.wa_urgent_prompt || 'Need urgent response?') + '</p><a href="' + waUrl + '" target="_blank" rel="noopener noreferrer" class="wpi-wa-link">💬 ' + (i18n.wa_btn_label || 'Chat on WhatsApp') + '</a></div>';
+            appendBotMessage(waPrompt, true);
+        }
+
+        userInput.placeholder = i18n.placeholder_notes;
+        submitLead({ isUpdate: true, isFinal: true, silent: false });
     }
 
     function toggleChat() {
@@ -276,6 +370,7 @@
             // All questions finished
             if (!flowCompleted && inquiryData.email) {
                 flowCompleted = true;
+                hideQuickSubmitBar();
                 submitLead({ isUpdate: true, isFinal: true, silent: false });
             }
             return;
@@ -288,8 +383,22 @@
         } else {
             qText = qText.replace(/\s*(for|about)?\s*\{product_name\}/gi, ' for our products');
         }
-        // Render question text
-        appendBotMessage(qText);
+
+        // Render question text with step progress badge if multi-question flow
+        const totalSteps = questions.length;
+        if (totalSteps > 1) {
+            const currentStep = currentQuestionIndex + 1;
+            const stepBadgeTemplate = i18n.step_badge || 'Step {current}/{total}';
+            const stepBadgeText = stepBadgeTemplate.replace('{current}', currentStep).replace('{total}', totalSteps);
+            appendBotMessage('<span class="wpi-step-badge">' + stepBadgeText + '</span> ' + qText, true);
+        } else {
+            appendBotMessage(qText);
+        }
+
+        // If contact info has been secured, ensure quick submit bar is displayed
+        if (leadCaptured && !flowCompleted) {
+            showQuickSubmitBar();
+        }
 
         // Update placeholder
         if (q.placeholder) {
@@ -313,6 +422,18 @@
                 };
                 actionsContainer.appendChild(btn);
             });
+
+            // If contact is already secured, also offer direct submit chip alongside options
+            if (leadCaptured && !flowCompleted) {
+                const submitChip = document.createElement('button');
+                submitChip.className = 'wpi-chip-btn wpi-chip-submit-now';
+                submitChip.type = 'button';
+                submitChip.innerHTML = '⚡ ' + (i18n.quick_submit_chip || 'Submit Now');
+                submitChip.onclick = () => {
+                    handleQuickSubmit();
+                };
+                actionsContainer.appendChild(submitChip);
+            }
         }
     }
 
@@ -406,9 +527,12 @@
                 submitLead({ isUpdate: false, isFinal: false, silent: true });
 
                 if (currentQuestionIndex < questions.length) {
+                    showQuickSubmitBar();
+                    appendBotMessage(i18n.email_saved_notice, true);
                     setTimeout(askCurrentQuestion, 600);
                 } else {
                     flowCompleted = true;
+                    hideQuickSubmitBar();
                     const successMsg = WPI_CONFIG.leadSuccessMsg || i18n.lead_success_msg;
                     appendBotMessage(successMsg);
                     userInput.placeholder = i18n.placeholder_notes;
@@ -449,6 +573,7 @@
             actionsContainer.innerHTML = '';
             if (currentQuestionIndex >= questions.length) {
                 flowCompleted = true;
+                hideQuickSubmitBar();
                 if (inquiryData.email) {
                     const successMsg = WPI_CONFIG.leadSuccessMsg || i18n.lead_success_msg;
                     appendBotMessage(successMsg);
@@ -490,6 +615,7 @@
 
         if (currentQuestionIndex >= questions.length) {
             flowCompleted = true;
+            hideQuickSubmitBar();
             if (inquiryData.email) {
                 const successMsg = WPI_CONFIG.leadSuccessMsg || i18n.lead_success_msg;
                 appendBotMessage(successMsg);
@@ -641,11 +767,14 @@
         }
     });
 
-    function appendBotMessage(text) {
-
+    function appendBotMessage(text, isHtml) {
         const div = document.createElement('div');
         div.className = 'wpi-msg wpi-msg-bot';
-        div.innerText = text;
+        if (isHtml || /<[a-z][\s\S]*>/i.test(text)) {
+            div.innerHTML = text;
+        } else {
+            div.innerText = text;
+        }
         messagesContainer.appendChild(div);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
