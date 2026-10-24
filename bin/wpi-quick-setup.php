@@ -645,10 +645,10 @@ function get_archetype_questions($industry) {
                     'question'    => 'What system voltage and energy storage capacity do you need?',
                     'type'        => 'choice_or_text',
                     'options'     => [
-                        '51.2V 100Ah (5.12 kWh Standard Unit)',
-                        '51.2V 200Ah / 280Ah (10 - 15 kWh Large Capacity)',
-                        'High Voltage Commercial System (200V - 600V+)',
-                        '12V / 24V Deep Cycle RV & Marine Battery'
+                        '12.8V / 25.6V Deep Cycle (40Ah - 230Ah for RV / Marine / Camping)',
+                        '48V / 51.2V 100Ah (5.12 kWh Standard Residential ESS)',
+                        '48V / 51.2V 200Ah / 280Ah (10 - 15 kWh Large Capacity Tower)',
+                        '3.2V 100Ah - 280Ah Prismatic LiFePO4 Cells (DIY Assembly)'
                     ],
                     'required'    => false,
                     'placeholder' => 'Specify kWh capacity, voltage or peak power...',
@@ -658,10 +658,10 @@ function get_archetype_questions($industry) {
                     'question'    => 'What structural form factor suits your installation site?',
                     'type'        => 'choice_or_text',
                     'options'     => [
-                        'Standard 19-inch Server Rack Mount',
-                        'Wall-mounted Residential Powerwall Style',
-                        'Stackable Floor-standing Modular Tower',
-                        'All-in-one Outdoor Battery Cabinet (IP55/IP65)'
+                        'Portable Outdoor Battery Box (Camping / Mobile Power / RV)',
+                        'Wall-mounted Residential Powerwall (Indoor Home ESS)',
+                        'Standard 19-inch Server Rack Mount / Stackable Tower',
+                        'Golf Cart / EV / Marine Waterproof Metal Enclosure'
                     ],
                     'required'    => false,
                     'placeholder' => 'Select structure or describe installation space...',
@@ -671,10 +671,10 @@ function get_archetype_questions($industry) {
                     'question'    => 'Which inverter brand or BMS communication protocol is required?',
                     'type'        => 'choice_or_text',
                     'options'     => [
-                        'Deye / Growatt / Victron / GoodWe (CAN/RS485)',
-                        'Voltronic / SMA / Solis Compatible',
-                        'Customized CAN / RS485 Communication Protocol',
-                        'Include Matching Hybrid Inverter'
+                        'Deye / Growatt / Victron / GoodWe / Solis (CAN / RS485)',
+                        'Smart Bluetooth BMS with Mobile App Monitoring',
+                        'Standalone DC Deep Cycle (No inverter protocol required)',
+                        'Need Complete Package (Matching Hybrid Inverter Included)'
                     ],
                     'required'    => false,
                     'placeholder' => 'Enter inverter brand and model...',
@@ -684,10 +684,10 @@ function get_archetype_questions($industry) {
                     'question'    => 'What cell grade and international certifications are needed?',
                     'type'        => 'choice_or_text',
                     'options'     => [
-                        'Grade-A EVE / CATL LiFePO4 Cells (6000+ Cycles)',
-                        'CE, UN38.3, MSDS Certified',
-                        'UL1973, UL9540A & IEC62619 Tested',
-                        'Built-in Smart Active Balancing BMS'
+                        'Grade-A EVE / CATL / REPT LiFePO4 (6000+ Deep Cycles)',
+                        'CE, UN38.3, MSDS Certified (Standard Sea/Air Shipping)',
+                        'UL1973, UL9540A & IEC62619 Tested for US / EU Grid',
+                        'Yinlong LTO Cylindrical Cells (-40°C Extreme Temperature)'
                     ],
                     'required'    => false,
                     'placeholder' => 'List required certificates or warranty terms...',
