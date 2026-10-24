@@ -7,7 +7,7 @@
  *
  * Options:
  *   --wp-path=<path>       WordPress 根目录路径 (默认自动从当前目录或父级向上探测)
- *   --industry=<archetype> 工业原型预设: smart_board | outdoor_lcd | video_wall | interactive_table | kiosk | touch_screen | stretched_bar | lighting | wear_parts | battery | generic
+ *   --industry=<archetype> 工业原型预设: solar_charging | smart_board | outdoor_lcd | video_wall | interactive_table | kiosk | touch_screen | stretched_bar | lighting | wear_parts | battery | generic
  *   --corpus=<file.json>   自定义追问表单 JSON 文件 (覆盖 industry 预设)
  *   --feishu=<url>         飞书机器人 Webhook 地址
  *   --secret=<secret>      飞书机器人签名密钥 (选填)
@@ -60,6 +60,7 @@ if (isset($options['help'])) {
                          • outdoor_lcd   : 户外高亮防水液晶屏 / 智慧公交站牌 / 户外广告机
                          • video_wall    : 液晶拼接屏电视墙 / 超窄边监控指挥大屏 / 拼接单元
                          • interactive_table: 智能触控茶几 / 会议触控桌 / 物体识别互动台
+                         • solar_charging: 太阳能光伏手机充电站 / 智慧光伏座椅长椅 / 景区离网充电亭
                          • kiosk         : 自助终端机 / 钣金工控柜 / 商用整机
                          • touch_screen  : 工业触控屏 / 工控一体机 / 嵌入式显示器
                          • stretched_bar : 条形液晶屏 / 数字标牌 / 货架长条屏
@@ -758,6 +759,75 @@ function get_archetype_questions($industry) {
                     ],
                     'required'    => false,
                     'placeholder' => 'Specify OS, CPU/RAM, or external PC connection...',
+                ],
+                $base_volume
+            ];
+        case 'solar_charging':
+        case 'solar_station':
+        case 'solar_bench':
+        case 'charging_station':
+            return [
+                [
+                    'id'               => 'name_email',
+                    'question'         => 'Hello, may I have your Name and Business Email?',
+                    'type'             => 'name_email',
+                    'required'         => true,
+                    'require_at_email' => true,
+                    'prompt_error'     => 'Please provide a valid business email containing "@" (e.g. name@company.com).',
+                    'placeholder'      => 'Your Name & Business Email with @...',
+                ],
+                $base_whatsapp,
+                [
+                    'id'          => 'station_type',
+                    'question'    => 'Which type of solar charging station or structure fits your site?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'Smart Solar Bench (Park / Campus / Walkway)',
+                        'Outdoor Solar Kiosk with LCD Advertising Display',
+                        'Freestanding Solar Charging Station / Pole',
+                        'Portable Fold Solar Panel + Power Station'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Select station type or describe your installation venue...',
+                ],
+                [
+                    'id'          => 'solar_battery',
+                    'question'    => 'What solar panel wattage and battery backup capacity do you require?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'Standard Solar (100W-200W) + Built-in LiFePO4 Battery',
+                        'High Power (300W-400W+) + 3-5 Days Rainy Day Autonomy',
+                        'Hybrid Solar + AC Grid Backup Power (Auto-switch)',
+                        'Custom Off-Grid Power System (Need Engineering Advice)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Select power capacity or specify your autonomy days...',
+                ],
+                [
+                    'id'          => 'charging_ports',
+                    'question'    => 'What charging methods and port configurations do you prefer?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'Qi Fast Wireless Pads (15W) + USB-A & Type-C PD Ports',
+                        'Multi-Port Fast Charging Hub (6-12 High-Speed USB Ports)',
+                        'AC Sockets (110V/220V for Laptops) + Wireless Charging',
+                        'Secure Phone Charging Lockers / Storage Compartments'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Select port options or specify connector types needed...',
+                ],
+                [
+                    'id'          => 'smart_iot',
+                    'question'    => 'Do you need smart IoT or value-added auxiliary features?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'Outdoor High-Brightness LCD Display (CMS Cloud Signage)',
+                        'Public 4G / Wi-Fi Hotspot Router & Antenna',
+                        'LED Night Ambience & Sensor Courtesy Lighting',
+                        'Standard Solar Station (Charging Only, No Extras)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Select auxiliary features or enter custom requirements...',
                 ],
                 $base_volume
             ];
