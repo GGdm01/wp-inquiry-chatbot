@@ -183,7 +183,7 @@ function get_archetype_questions($industry) {
             return [
                 [
                     'id'               => 'name_email',
-                    'question'         => 'Hello, may I have your Name and Business Email to send the CAD sheet-metal drawings and factory quotation?',
+                    'question'         => 'Hello, may I have your Name and Business Email?',
                     'type'             => 'name_email',
                     'required'         => true,
                     'require_at_email' => true,
@@ -250,7 +250,7 @@ function get_archetype_questions($industry) {
             return [
                 [
                     'id'               => 'name_email',
-                    'question'         => 'Hello, may I have your Name and Business Email to send the mechanical CAD drawings and wholesale price list?',
+                    'question'         => 'Hello, may I have your Name and Business Email?',
                     'type'             => 'name_email',
                     'required'         => true,
                     'require_at_email' => true,
@@ -646,6 +646,12 @@ update_option('wpi_enabled', '1');
 update_option('wpi_custom_default_questions', $questions);
 update_option('wpi_custom_default_saved_at', current_time('mysql'));
 echo "  \033[1;32m✓\033[0m 已自动固化为「站点专属默认预设」 (wpi_custom_default_questions)，后续防误触丢失。\n";
+
+// 自动清除欢迎语中的 CAD 痕迹
+$curr_welcome = get_option('wpi_welcome_msg', '');
+if (empty($curr_welcome) || stripos($curr_welcome, 'CAD') !== false) {
+    update_option('wpi_welcome_msg', 'Hi! Looking for factory-direct wholesale prices or specifications for "{product_name}"?');
+}
 
 // 客服称呼与 WhatsApp
 if (!empty($options['bot-name'])) {

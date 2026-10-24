@@ -14,7 +14,7 @@ class WPI_Admin {
             update_option('wpi_enabled', '1');
             update_option('wpi_language', 'en');
             update_option('wpi_bot_name', 'Sales Specialist');
-            update_option('wpi_welcome_msg', 'Hi! Looking for factory-direct wholesale prices or CAD specs for "{product_name}"?');
+            update_option('wpi_welcome_msg', 'Hi! Looking for factory-direct wholesale prices or specifications for "{product_name}"?');
             update_option('wpi_default_welcome_msg', 'Hi there! Welcome to our official site. How can we help your project today?');
             update_option('wpi_lead_success_msg', 'Thank you! Our engineering and sales team will contact you within 2 hours with the specs and quotation.');
             update_option('wpi_form_questions', self::get_email_first_form_questions());
@@ -43,7 +43,7 @@ class WPI_Admin {
         return [
             [
                 'id'       => 'email',
-                'question' => 'Hello! Please enter your business Email to receive the factory wholesale price sheet and CAD drawings for {product_name}:',
+                'question' => 'Hello! Please enter your business Email to receive the factory wholesale price sheet for {product_name}:',
                 'type'     => 'email',
                 'required' => true,
                 'require_at_email' => true,
@@ -306,7 +306,7 @@ class WPI_Admin {
                 'email_required_error'=> 'Please provide a valid business email containing "@" (e.g. name@company.com) so our engineer can send the specifications.',
                 'email_test_error'    => 'Please provide a reachable business email address. Test accounts (e.g. containing "test") cannot receive official quotes and specifications.',
                 'email_fallback'      => 'Please enter your business Email containing "@" so our engineer can send the specifications.',
-                'welcome_msg'         => 'Hi! Looking for factory-direct wholesale prices or CAD specs for "{product_name}"?',
+                'welcome_msg'         => 'Hi! Looking for factory-direct wholesale prices or specifications for "{product_name}"?',
                 'default_welcome_msg' => 'Hi there! Welcome to our official site. How can we help your project today?',
                 'lead_success_msg'    => 'Thank you! Our engineering and sales team will contact you within 2 hours with the specs and quotation.',
             ],
@@ -604,7 +604,7 @@ class WPI_Admin {
             } else {
                 update_option('wpi_language', 'en');
                 update_option('wpi_bot_name', 'Sales Specialist');
-                update_option('wpi_welcome_msg', 'Hi! Looking for factory-direct wholesale prices or CAD specs for "{product_name}"?');
+                update_option('wpi_welcome_msg', 'Hi! Looking for factory-direct wholesale prices or specifications for "{product_name}"?');
                 update_option('wpi_default_welcome_msg', 'Hi there! Welcome to our official site. How can we help your project today?');
                 update_option('wpi_lead_success_msg', 'Thank you! Our engineering and sales team will contact you within 2 hours with the specs and quotation.');
                 add_settings_error('wpi_messages', 'wpi_i18n_loaded', '已切换为英文模式，并成功重置为英文预设问候语与客服名称。', 'updated');
