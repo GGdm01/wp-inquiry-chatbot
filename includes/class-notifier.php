@@ -235,6 +235,10 @@ class WPI_Notifier {
      */
     public static function format_clean_label($q) {
         $q_lower = strtolower(trim($q, " :：\t\n\r\0\x0B?？"));
+        if (preg_match('/(game_type|interactive_game|attraction|interactive_type|smash_ball|sandbox|trampoline|互动形态|游戏类型|设备门类)/i', $q_lower)) return '互动形态';
+        if (preg_match('/(hardware_package|supply_mode|projector_setup|turnkey|供货方案|硬件配置|成套交付)/i', $q_lower)) return '供货方案';
+        if (preg_match('/(projection_dimension|projection_area|projection_size|投影面积|投影尺寸|投影画面)/i', $q_lower)) return '投影尺寸';
+        if (preg_match('/(game_customization|game_content|game_library|custom_game|游戏内容|定制游戏|游戏库)/i', $q_lower)) return '游戏内容';
         if (preg_match('/(hologram|showcase|fan|oled|pyramid|全息|展柜|风扇)/i', $q_lower)) return '展示形态';
         if (preg_match('/(optical|tracking|lens|viewing|视角|光学|角度|追踪)/i', $q_lower)) return '光学视角';
         if (preg_match('/(scenario|classroom|conference|meeting|用途|场景)/i', $q_lower)) return '应用场景';

@@ -57,6 +57,7 @@ if (isset($options['help'])) {
   --update               强制重新拉取最新版本覆盖现有插件
   --industry=<行业>      注入行业专属 7 步提问预设 (严格包含首步 @ 邮箱门禁):
                          • smart_board   : 教学与会议智能平板一体机 / 交互白板 / IFPD (65"~98" 4K)
+                         • retail_signage: 零售商用 Android 广告机与数字标牌 / 连锁店促销大屏 / 商超导览屏
                          • outdoor_lcd   : 户外高亮防水液晶屏 / 智慧公交站牌 / 户外广告机
                          • video_wall    : 液晶拼接屏电视墙 / 超窄边监控指挥大屏 / 拼接单元
                          • interactive_table: 智能触控茶几 / 会议触控桌 / 物体识别互动台
@@ -1104,6 +1105,76 @@ function get_archetype_questions($industry) {
                     ],
                     'required'    => false,
                     'placeholder' => 'Specify OS, OPS PC specs (i5/i7/RAM/SSD) or accessories...',
+                ],
+                $base_volume
+            ];
+        case 'retail_signage':
+        case 'commercial_signage':
+        case 'ad_display':
+        case 'digital_signage':
+            return [
+                [
+                    'id'               => 'name_email',
+                    'question'         => 'Hello, may I have your Name and Business Email?',
+                    'type'             => 'name_email',
+                    'required'         => true,
+                    'require_at_email' => true,
+                    'prompt_error'     => 'Please provide a valid business email containing "@" (e.g. name@company.com) so we can send the wholesale catalog.',
+                    'placeholder'      => 'Your Name & Business Email with @...',
+                ],
+                $base_whatsapp,
+                [
+                    'id'          => 'mounting_form',
+                    'question'    => 'Which digital signage mounting form factor best fits your retail store or venue layout?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'Wall-Mounted Android Advertising Display (19" - 55" Slim Bezel)',
+                        'Floor-Standing Digital Poster Totem (50" / 55" Tempered Glass)',
+                        'Hanging Double-Sided Window Display (High Brightness)',
+                        'Portable Battery Powered A-Board (43" / 49" Folding Sidewalk)',
+                        'Countertop / Shelf-Edge POS Display (10.1" / 15.6")'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Select mounting style or describe your store layout...',
+                ],
+                [
+                    'id'          => 'screen_size',
+                    'question'    => 'What screen size and resolution do you prefer for your stores or deployment sites?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        '43" / 50" / 55" Commercial IPS (Most Popular for Retail Promotion)',
+                        '32" Digital Menu Board / Wall Kiosk',
+                        '10.1" / 15.6" / 21.5" Countertop & POS Screen',
+                        '65" / 75" / 86" 4K Large Format Display / Video Wall'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Select screen size or paste reference product model...',
+                ],
+                [
+                    'id'          => 'brightness_features',
+                    'question'    => 'What brightness level and interactive features do your store environments require?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'Standard Indoor 450 cd/m² (Retail Shop, Showroom, 24/7 IPS Panel)',
+                        'Window-Facing High Brightness 700 - 1500 cd/m² (Sunlight Visible)',
+                        'Outdoor Weatherproof IP65 2500 - 3500 cd/m²',
+                        'Multi-Touch Screen (PCAP 10-Point Touch for Interactive Navigation)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Select brightness / touch or specify ambient lighting conditions...',
+                ],
+                [
+                    'id'          => 'system_cms',
+                    'question'    => 'Which operating system and content management solution do you require?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'Android OS + Cloud CMS (Remote Multi-Store Wi-Fi/4G/LAN Update)',
+                        'Plug & Play Standalone (USB Auto-Loop Video / Images)',
+                        'Windows 10/11 Pro (OPS Intel Core i5/i7 Industrial PC)',
+                        'Monitor Only (HDMI / VGA Video Input for External Player)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Specify OS version, CMS software, or RAM/Storage requirements...',
                 ],
                 $base_volume
             ];
