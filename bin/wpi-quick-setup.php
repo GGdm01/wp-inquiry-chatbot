@@ -27,6 +27,9 @@ if (php_sapi_name() !== 'cli') {
 // -------------------------------------------------------------
 $long_opts = [
     'wp-path::',
+    'plugin-src::',
+    'src::',
+    'update',
     'industry::',
     'corpus::',
     'feishu::',
@@ -48,9 +51,9 @@ if (isset($options['help'])) {
 \033[1;33m用法:\033[0m
   php bin/wpi-quick-setup.php [参数]
 
-\033[1;33m参数说明:\033[0m
   --wp-path=<路径>       WordPress 安装根目录 (默认自动探测)
-  --industry=<行业>      注入行业专属 7 步提问预设 (严格包含首步 @ 邮箱门禁):
+  --plugin-src=<目录>    指定本地插件代码源目录 (若指定则直接从该目录同步覆盖，秒级就位)
+  --update               强制重新拉取最新版本覆盖现有插件
                          • kiosk         : 自助终端机 / 钣金工控柜 / 商用整机
                          • touch_screen  : 工业触控屏 / 工控一体机 / 嵌入式显示器
                          • stretched_bar : 条形液晶屏 / 数字标牌 / 货架长条屏
@@ -125,20 +128,116 @@ if (!defined('ABSPATH')) {
 // -------------------------------------------------------------
 // 3. 激活插件与执行数据库建表 / 迁移
 // -------------------------------------------------------------
-echo "\033[1;34m[2/6]\033[0m 检查并激活插件 ...\n";
+echo "\033[1;34m[2/6]\033[0m 检查插件安装状态与版本 ...\n";
+$plugin_dir = WP_PLUGIN_DIR . '/wp-inquiry-chatbot';
+$plugin_file = $plugin_dir . '/wp-inquiry-chatbot.php';
 $plugin_rel_path = 'wp-inquiry-chatbot/wp-inquiry-chatbot.php';
+
+// 辅助函数：从插件主文件读取版本号
+function get_local_plugin_version($file) {
+    if (!file_exists($file)) {
+        return '0.0.0';
+    }
+    $content = file_get_contents($file);
+    if (preg_match('/Version:\s*([0-9\.]+)/i', $content, $m)) {
+        return trim($m[1]);
+    }
+    return '0.0.0';
+}
+
+// 辅助函数：目录递归同步
+function sync_directory($src, $dest) {
+    if (!is_dir($dest)) {
+        @mkdir($dest, 0755, true);
+    }
+    $it = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($src, RecursiveDirectoryIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::SELF_FIRST
+    );
+    foreach ($it as $item) {
+        $target = $dest . '/' . $it->getSubPathName();
+        if ($item->isDir()) {
+            if (!is_dir($target)) {
+                @mkdir($target, 0755, true);
+            }
+        } else {
+            @copy($item->getRealPath(), $target);
+        }
+    }
+}
+
+// 分支 A: 用户显式指定了本地插件目录 (--plugin-src 或 --src)
+$custom_src = $options['plugin-src'] ?? ($options['src'] ?? null);
+if (!empty($custom_src)) {
+    $custom_src = rtrim(realpath($custom_src) ?: $custom_src, '/');
+    if (!is_dir($custom_src) || !file_exists($custom_src . '/wp-inquiry-chatbot.php')) {
+        echo "\033[1;31m[错误]\033[0m 指定的插件源目录 {$custom_src} 不存在或不包含 wp-inquiry-chatbot.php！\n";
+        exit(1);
+    }
+    $src_ver = get_local_plugin_version($custom_src . '/wp-inquiry-chatbot.php');
+    echo "  \033[1;33m[指定本地源]\033[0m 正在从指定目录 {$custom_src} 同步插件代码 (版本: v{$src_ver}) ...\n";
+    sync_directory($custom_src, $plugin_dir);
+    echo "  \033[1;32m✓\033[0m 已成功从指定目录就位插件最新代码 (v{$src_ver})！\n";
+} else {
+    // 分支 B: 自动检测远端 (Gitea / GitHub) 最新版本号：有就更新，没有就装
+    $local_installed = file_exists($plugin_file);
+    $local_ver = $local_installed ? get_local_plugin_version($plugin_file) : '0.0.0';
+
+    echo "  • 探测远端最新版本号 (GitHub / Gitea) ...\n";
+    $remote_probe = @file_get_contents('https://raw.githubusercontent.com/GGdm01/wp-inquiry-chatbot/main/info.json');
+    $remote_meta = $remote_probe ? json_decode($remote_probe, true) : null;
+    $remote_ver = $remote_meta['version'] ?? '1.4.5';
+    $zip_url = $remote_meta['download_url'] ?? 'https://github.com/GGdm01/wp-inquiry-chatbot/archive/refs/heads/main.zip';
+
+    $need_install = !$local_installed;
+    $need_update  = $local_installed && (version_compare($local_ver, $remote_ver, '<') || isset($options['update']));
+
+    if ($need_install || $need_update) {
+        $action_label = $need_install ? "未检测到插件，自动全新下载安装" : "检测到新版本 (本地 v{$local_ver} -> 远端 v{$remote_ver})，自动更新升级";
+        echo "  \033[1;33m[自动维护]\033[0m {$action_label} (v{$remote_ver}) ...\n";
+
+        $tmp_zip = sys_get_temp_dir() . '/wpi_latest_' . time() . '.zip';
+        $zip_content = @file_get_contents($zip_url);
+        if ($zip_content && file_put_contents($tmp_zip, $zip_content)) {
+            $zip = new ZipArchive();
+            if ($zip->open($tmp_zip) === true) {
+                $extract_target = sys_get_temp_dir() . '/wpi_unpacked_' . time();
+                $zip->extractTo($extract_target);
+                $zip->close();
+                @unlink($tmp_zip);
+
+                $src_folder = $extract_target . '/wp-inquiry-chatbot-main';
+                if (is_dir($src_folder)) {
+                    sync_directory($src_folder, $plugin_dir);
+                    exec("rm -rf " . escapeshellarg($extract_target));
+                    echo "  \033[1;32m✓\033[0m 插件已成功就位最新版本 v{$remote_ver}！\n";
+                }
+            }
+        } else {
+            // 降级尝试 git clone
+            if ($need_install) {
+                echo "  • 降级通过 Git 克隆官方代码 ...\n";
+                exec("git clone https://github.com/GGdm01/wp-inquiry-chatbot.git " . escapeshellarg($plugin_dir));
+            }
+        }
+    } else {
+        echo "  \033[1;32m✓\033[0m 插件已是最新版本 (v{$local_ver})，无需重复下载。\n";
+    }
+}
+
+// 激活插件
 if (!is_plugin_active($plugin_rel_path)) {
     require_once ABSPATH . 'wp-admin/includes/plugin.php';
     $activate_res = activate_plugin($plugin_rel_path);
     if (is_wp_error($activate_res)) {
-        echo "\033[1;31m[警告]\033[0m 插件激活返回错误: " . $activate_res->get_error_message() . " (尝试继续)\n";
+        echo "\033[1;31m[警告]\033[0m 插件激活返回: " . $activate_res->get_error_message() . " (尝试继续)\n";
     } else {
         echo "  \033[1;32m✓\033[0m 插件 wp-inquiry-chatbot 已激活！\n";
     }
 } else {
-    echo "  \033[1;32m✓\033[0m 插件已处于激活状态。\n";
+    $current_ver = get_local_plugin_version($plugin_file);
+    echo "  \033[1;32m✓\033[0m 插件已处于激活状态 (运行版本: v{$current_ver})。\n";
 }
-
 // 强制执行数据表结构同步
 if (class_exists('WPI_DB')) {
     WPI_DB::create_tables();

@@ -42,104 +42,87 @@ graph TD
 
 ---
 
-### 🚀 轨道 A：服务器端极速一键部署（推荐 · 1~2 秒完成全流程）
+### 🚀 轨道 A：服务器端极速自主更新与一键部署（推荐 · 1~2 秒完成全流程）
 
-直接通过 SSH 或服务器终端执行插件内置的 `bin/wpi-quick-setup.php`，零依赖、秒级完成底层激活、建表、语料注入、快照固化与缓存清理：
+在服务器终端执行时，**AI 必须自主处理代码源与版本状态，绝不死板硬编码版本号**：
+
+#### 1. 代码源优先级与版本自治机制（有就更新，没有就装，接受显式指定）：
+* **优先支持用户指定目录**：若命令中显式传入了本地/指定代码目录（如 `--plugin-src=/path/to/wp-chatbot` 或从当前开发机 rsync 同步），**直接接受指定**，优先使用指定目录的代码覆盖就位，0 网络延迟；
+* **未指定时全自动远端校验**：自动探测 Gitea (`192.168.31.16:22610` / `gitgit.8268888.xyz`) 或 GitHub (`GGdm01/wp-inquiry-chatbot`) 的最新 Release 版本号：
+  - **未安装**：自动拉取官方最新版本全新安装；
+  - **已安装但非最新**：自动下载最新代码覆盖热更新，并自动触发 `WPI_DB::create_tables()` 增量表迁移；
+  - **已是最新版**：直接跳过拉取，秒级执行业务配置。
 
 ```bash
-# 进入站点根目录并执行（支持自动递归向上探测 wp-load.php）：
+# 场景 1：默认自动模式（自动比对远端版本：没有就装，有新就更）
 php wp-content/plugins/wp-inquiry-chatbot/bin/wpi-quick-setup.php \
   --industry=kiosk \
   --feishu="https://open.feishu.cn/open-apis/bot/v2/hook/xxx" \
   --whatsapp="+8618098949445" \
   --test-feishu
+
+# 场景 2：接受显式指定目录（直接将指定源码目录秒级同步覆盖）
+php wp-content/plugins/wp-inquiry-chatbot/bin/wpi-quick-setup.php \
+  --plugin-src="/path/to/wp-chatbot" \
+  --industry=touch_screen \
+  --feishu="https://open.feishu.cn/open-apis/bot/v2/hook/xxx" \
+  --test-feishu
 ```
 
 **参数支持：**
+* `--plugin-src=<目录>`：直接指定本地/服务器上的插件代码源目录，直接同步覆盖生效。
 * `--industry`：`kiosk` (自助终端整机), `touch_screen` (工业触控屏), `stretched_bar` (条形液晶屏), `lighting` (商业照明), `wear_parts` (机械耐磨件), `battery` (储能锂电), `generic` (工业通用)。
 * `--corpus=/path/to/custom.json`：直接指定自定义 7 步表单文件。
 * `--feishu` & `--secret`：飞书机器人 Webhook 与签名密钥。
 * `--test-feishu`：配置后立刻向外贸群推送交互卡片验证连通性。
 * `--clean-cache`：自动清理 WP Super Cache、LiteSpeed、Seraphinite 等整站缓存。
-
 ---
 
 ### 🖥️ 轨道 B：浏览器 CDP / WP Admin 后台配置（备用）
 
 在无服务器 SSH / CLI 权限时，走原有的 6 大标准步：
 
-### Step 1：通过 CDP 或凭证登录 WP 后台并核验插件版本
+### Step 1：自主核验插件版本并升级至 GitHub 官方最新版 (v1.4.5+)
 
-1. **连接目标浏览器 CDP 调试端口**：
+1. **官方最新源**：
+   - 官方最新 Release ZIP：`https://github.com/GGdm01/wp-inquiry-chatbot/archive/refs/heads/main.zip`
+   - 版本元数据探针：`https://raw.githubusercontent.com/GGdm01/wp-inquiry-chatbot/main/info.json`
+2. **连接目标浏览器 CDP 调试端口**：
    ```bash
    curl -s http://127.0.0.1:<PORT>/json/list
    ```
-2. **登录后台并检查插件**：
-   - 访问 `/wp-admin/plugins.php`。
-   - 检查 `WP Inquiry Chatbot (ECV Style)` 插件版本。
-   - 若低于 `1.4.2`，通过 `/wp-admin/plugin-install.php?tab=upload` 上传 GitHub 官方最新版 ZIP（或本地编译包）并选择覆盖升级。
-   - 确认版本为 `v1.4.2+`（支持原生自动热更新与 10 字段精简数据架构）。
-
+3. **登录后台核验与自主升级**：
+   - 访问 `/wp-admin/plugins.php`，检查 `WP Inquiry Chatbot (ECV Style)` 插件版本。
+   - 若未安装或版本低于 `1.4.5`：
+     - **自主升级方式 A（原生热更）**：访问 `/wp-admin/admin.php?page=wpi-settings`，点击「检查更新」，触发 WP 原生 1-click 热更新。
+     - **自主升级方式 B（上传覆盖）**：在 `/wp-admin/plugin-install.php?tab=upload` 直接上传最新的 `main.zip` 并选择「覆盖现有插件」。
+   - 确认版本为 `v1.4.5+`（具备胶囊条输入即提交、Contact details saved 定心丸通知、步骤指示器与折叠预设抽屉）。
 ---
 
-### Step 2：四维立体产品线与买家定制要素深度分析（全面强化）
+### Step 2：从当前站点动态提取定制要素（拒绝死板套用）
 
-在控制台或 CDP 环境中抓取站点的产品与规格骨架，杜绝主观臆测：
+严禁使用死板的假预设或套模子。直接在目标站点控制台或通过 CDP 读取该站的真实商品数据：
 
-#### 1. 四维立体数据抓取脚本 (4-Dimensional Asset Harvesting)
 ```javascript
-// 在目标站点控制台运行抓取
-const analysis = await (async () => {
-  // ① 分类与标签
-  const catsRes = await fetch("/wp-json/wp/v2/product_cat?per_page=50");
-  const cats = catsRes.ok ? await catsRes.json() : [];
-
-  // ② 产品样本
-  const prodsRes = await fetch("/wp-json/wp/v2/product?per_page=30");
-  const prods = prodsRes.ok ? await prodsRes.json() : [];
-
-  // ③ 全局商品规格属性 (WooCommerce Attributes)
-  const attrsRes = await fetch("/wp-json/wc/v3/products/attributes");
-  const attrs = attrsRes.ok ? await attrsRes.json() : [];
-
-  // ④ 主菜单导航结构 (Menu Hierarchy)
-  const menuLinks = Array.from(document.querySelectorAll("header nav a, .main-navigation a, #site-navigation a"))
-    .map(a => ({ text: a.innerText.trim(), href: a.href }))
-    .filter(m => m.text && !m.href.includes("cart") && !m.href.includes("account"));
-
+const siteData = await (async () => {
+  const cats = await (await fetch("/wp-json/wp/v2/product_cat?per_page=50")).json();
+  const prods = await (await fetch("/wp-json/wp/v2/product?per_page=30")).json();
   return {
-    categories: cats.map(c => ({ id: c.id, name: c.name, count: c.count })),
-    products: prods.slice(0, 10).map(p => ({ title: p.title?.rendered, slug: p.slug })),
-    attributes: attrs.map(a => a.name),
-    menuSample: menuLinks.slice(0, 15)
+    categories: cats.map(c => c.name),
+    productTitles: prods.slice(0, 15).map(p => p.title?.rendered)
   };
 })();
-console.log("站点资产分析结果:", JSON.stringify(analysis, null, 2));
+console.log("站点真实产品线:", siteData);
 ```
 
-#### 2. B2B 买家画像与决策维度挖掘
-- **买家角色定位**：
-  - **系统集成商 / 工程商 (System Integrator)**：最关心外设接口兼容性、模块化开孔结构、安装公差、SDK/驱动支持。
-  - **硬件研发工程师 (R&D / Solution Architect)**：最关心主板方案（x86 vs ARM）、散热方式、供电电压、抗干扰与防护等级（IP65）。
-  - **贸易商 / 品牌采购总监 (Importer / Wholesaler)**：最关心阶梯批发价、打样交付周期、自定义 Logo/包装丝印、认证资质（CE/FCC/UL/RoHS）。
-  - **招投标工程方 (Tender Bidder)**：最关心是否支持按招标文件深度定制、成套出厂检测报告。
-- **不可或缺的前置工程参数 (Critical RFQ Prerequisites)**：
-  - 提炼销售人员与结构工程师“不拿到就无法出报价和图纸”的核心参数，将其排入第 3~6 题。
+**动态提炼 3~5 个工程核心变量**：
+直接观察抓取出的产品标题与分类名称，提炼出销售与工程师给买家出图纸和报价必须获知的几个核心问题：
+1. **产品形态/安装方式**（如立式/壁挂/嵌入式、还是特定结构）；
+2. **关键规格/选配模块**（根据产品标题中反复出现的关键词提取，如外设开孔、光学参数、材质型号等）；
+3. **尺寸/配置参数**（主流对角线尺寸、处理芯片或功率等级）；
+4. **采购批量与交期**（样机、小批、批量）。
 
-#### 3. 六大典型 B2B 工业出海原型库（Archetype Library）
-- **原型 1：商用自助终端与集成整机 (Self-Service Kiosk / ATM / Ticketing)**
-  - 核心要素：安装形态（立式整机/台式壁挂/嵌入式/户外防水）+ 外设开孔（POS/打印机/发卡器/扫码）+ 屏幕尺寸 + 主控系统（Windows/Android/自备主机）+ 批量周期。
-- **原型 2：工业级显示器与工控机 (Industrial Touch Display / Panel PC)**
-  - 核心要素：安装方式（嵌入式Open Frame/前锁无缝Flush/后置Rear/VESA）+ 触控方案（电容投射/电阻式/防爆钢化无触控）+ 亮度环境（室内300nit/户外阳光下可视1000nit+）+ 信号接口。
-- **原型 3：商业条形液晶屏与数字标牌 (Stretched Bar LCD / Digital Signage / Video Wall)**
-  - 核心要素：裁切长宽比例 + 安装朝向（横装/竖装/双面吊挂）+ 信发系统（单机U盘/云端CMS/安卓网络板）+ 供电模式（DC 12V车载/商用AC 220V）。
-- **原型 4：商业建筑与特种照明 (Architectural / Commercial / Industrial LED Lighting)**
-  - 核心要素：安装结构（铝型材嵌入/悬吊/地埋/水下）+ 光学特性（色温CCT/显指CRI/配光透镜角度）+ 调光方案（DALI/0-10V/DMX512）+ 驱动电源与安规认证。
-- **原型 5：工程机械与五金耐磨零部件 (Excavator Bucket Teeth / Wear Parts / Hydraulic Seals)**
-  - 核心要素：主机适配品牌（CAT/Komatsu/Hitachi/Volvo）+ 构件型号（J300/J350等）+ 施工工况（常规土方/高磨损硬岩/重载矿山）+ 采购批量（整箱/吨位）。
-- **原型 6：光伏与工业储能系统 (Solar / Energy Storage LiFePO4 Battery / Inverters)**
-  - 核心要素：电池系统容量/电压（51.2V 100Ah/200Ah等）+ 安装结构（机架式/机柜式/壁挂式）+ 逆变器协议匹配（Growatt/Deye/Victron通信兼容）+ 循环寿命与电芯认证。
-
+每个问题直接从该站产品线提取 3~4 个真实典型选项供一键点击，外加自由输入占位符。
 ---
 
 ### Step 3：构建标准的 7 步发散追问表单结构
