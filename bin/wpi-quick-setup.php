@@ -1195,7 +1195,14 @@ function get_archetype_questions($industry) {
                     'prompt_error'     => 'Please provide a valid business email containing "@" (e.g. name@company.com) so we can send the product catalog and factory quotation.',
                     'placeholder'      => 'Your Name & Business Email with @...',
                 ],
-                $base_whatsapp,
+                [
+                    'id'          => 'whatsapp_contact',
+                    'question'    => 'Do you use WhatsApp or WeChat for quick video demonstration and quotation?',
+                    'type'        => 'optional_text',
+                    'options'     => ['📲 Chat on WhatsApp (+8618098949445)', 'Prefer Email only ✉️'],
+                    'required'    => false,
+                    'placeholder' => 'Enter your WhatsApp/Phone or select above...',
+                ],
                 [
                     'id'          => 'interactive_game_type',
                     'question'    => 'Which interactive projection game or attraction type are you looking for?',
@@ -1249,7 +1256,19 @@ function get_archetype_questions($industry) {
                     'required'    => false,
                     'placeholder' => 'Select option or describe your custom theme...',
                 ],
-                $base_volume
+                [
+                    'id'          => 'project_volume',
+                    'question'    => 'What is your estimated order quantity and project schedule?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        '1-2 units (Sample test / Single attraction upgrade)',
+                        '3-5 units (Complete playground / Multi-zone project)',
+                        '10+ units (Distributor wholesale / Chain FEC rollout)',
+                        'Commercial Tender / Planning stage'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'e.g. 2 sets needed for opening next month...',
+                ]
             ];
         case 'touch_signage':
         case 'thai_signage':
