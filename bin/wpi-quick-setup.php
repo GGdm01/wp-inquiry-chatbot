@@ -201,13 +201,24 @@ if (!empty($custom_src)) {
         $tmp_zip = sys_get_temp_dir() . '/wpi_latest_' . time() . '.zip';
         $zip_content = @file_get_contents($zip_url);
         if ($zip_content && file_put_contents($tmp_zip, $zip_content)) {
-            $zip = new ZipArchive();
-            if ($zip->open($tmp_zip) === true) {
-                $extract_target = sys_get_temp_dir() . '/wpi_unpacked_' . time();
-                $zip->extractTo($extract_target);
-                $zip->close();
-                @unlink($tmp_zip);
-
+            $extracted = false;
+            $extract_target = sys_get_temp_dir() . '/wpi_unpacked_' . time();
+            if (class_exists('ZipArchive')) {
+                $zip = new ZipArchive();
+                if ($zip->open($tmp_zip) === true) {
+                    $zip->extractTo($extract_target);
+                    $zip->close();
+                    $extracted = true;
+                }
+            } else {
+                @mkdir($extract_target, 0755, true);
+                exec("unzip -q " . escapeshellarg($tmp_zip) . " -d " . escapeshellarg($extract_target), $u_out, $u_ret);
+                if ($u_ret === 0) {
+                    $extracted = true;
+                }
+            }
+            @unlink($tmp_zip);
+            if ($extracted) {
                 $src_folder = $extract_target . '/wp-inquiry-chatbot-main';
                 if (is_dir($src_folder)) {
                     sync_directory($src_folder, $plugin_dir);
@@ -215,12 +226,10 @@ if (!empty($custom_src)) {
                     echo "  \033[1;32m✓\033[0m 插件已成功就位最新版本 v{$remote_ver}！\n";
                 }
             }
-        } else {
-            // 降级尝试 git clone
-            if ($need_install) {
-                echo "  • 降级通过 Git 克隆官方代码 ...\n";
-                exec("git clone https://github.com/GGdm01/wp-inquiry-chatbot.git " . escapeshellarg($plugin_dir));
-            }
+        }
+        if ($need_install && !file_exists($plugin_file)) {
+            echo "  • 降级通过 Git 克隆官方代码 ...\n";
+            exec("git clone https://github.com/GGdm01/wp-inquiry-chatbot.git " . escapeshellarg($plugin_dir));
         }
     } else {
         echo "  \033[1;32m✓\033[0m 插件已是最新版本 (v{$local_ver})，无需重复下载。\n";
@@ -686,11 +695,11 @@ function get_archetype_questions($industry) {
             return [
                 [
                     'id'               => 'name_email',
-                    'question'         => 'Hello, may I have your Name and Business Email to send the CAD drawings, table dimensions and wholesale quotation?',
+                    'question'         => 'Hello, may I have your Name and Business Email?',
                     'type'             => 'name_email',
                     'required'         => true,
                     'require_at_email' => true,
-                    'prompt_error'     => 'Please provide a valid business email containing "@" (e.g. name@company.com) so we can send the drawings and quotation.',
+                    'prompt_error'     => 'Please provide a valid business email containing "@" (e.g. name@company.com).',
                     'placeholder'      => 'Your Name & Business Email with @...',
                 ],
                 $base_whatsapp,
