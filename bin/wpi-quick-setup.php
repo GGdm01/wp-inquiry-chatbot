@@ -895,6 +895,77 @@ function get_archetype_questions($industry) {
                 ],
                 $base_volume
             ];
+        case 'holographic':
+        case '3d_hologram':
+        case 'hologram':
+        case '3d_display':
+        case 'showcase':
+            return [
+                [
+                    'id'               => 'name_email',
+                    'question'         => 'Hello, may I have your Name and Business Email?',
+                    'type'             => 'name_email',
+                    'required'         => true,
+                    'require_at_email' => true,
+                    'prompt_error'     => 'Please provide a valid business email containing "@" (e.g. name@company.com) so we can send the 3D demo videos & factory quotation.',
+                    'placeholder'      => 'Your Name & Business Email with @...',
+                ],
+                $base_whatsapp,
+                [
+                    'id'          => 'display_format',
+                    'question'    => 'Which 3D holographic display format or showcase fits your application?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        '3D Holographic Showcase (180° / 270° / 360° Pyramid Cabinet)',
+                        'Transparent OLED / LCD Showcase (For Luxury Retail, Jewelry & Museum)',
+                        'Glasses-Free 3D Commercial Display (Single Screen 32" - 110" 4K/8K)',
+                        '3D Holographic Splicing Video Wall (Multi-Screen Light Field Array)',
+                        '3D Holographic LED Fan (Single Unit or Multi-Fan Matrix Wall)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Select showcase type or describe your exhibition requirement...',
+                ],
+                [
+                    'id'          => 'optical_features',
+                    'question'    => 'What optical viewing technology and interactive features do you require?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'Multi-View Light Field (Multi-person wide viewing without 3D glasses)',
+                        'Real-Time Eye-Tracking 3D (Deep spatial depth with camera tracking)',
+                        'PCAP Multi-Touch Interactive (Touch to rotate/zoom 3D product models)',
+                        'Ultra High Brightness (700 - 2500 nits for retail window & commercial mall)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Select optical feature or specify viewing angle requirements...',
+                ],
+                [
+                    'id'          => 'screen_size',
+                    'question'    => 'What screen size or showcase cabinet dimension do you prefer?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'Compact Desktop / Countertop (13.3", 21.5", 27", 32")',
+                        'Standard Commercial / Totem (43", 50", 55", 65")',
+                        'Large-Format Landmark (85", 86" Portrait 8K, 98", 110")',
+                        'Custom Built Showcase Cabinet (Tailored dimensions for exhibits)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Select size or specify custom cabinet L*W*H dimensions...',
+                ],
+                [
+                    'id'          => 'host_specs',
+                    'question'    => 'Which media controller and content playback system do you require?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'Android Media Player (Plug & Play, WiFi/LAN, Remote CMS Loop)',
+                        'Windows 10/11 Pro (Core i5/i7 + Dedicated GPU for Unity/Unreal 3D)',
+                        'Pure Monitor Mode (HDMI 2.0/2.1 + USB for External PC Server)',
+                        'Need Custom 3D Holographic Animation & Modeling Support'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Specify OS, GPU/CPU, CMS, or 3D content creation needs...',
+                ],
+                $base_volume
+            ];
 
         default: // generic
             return [
