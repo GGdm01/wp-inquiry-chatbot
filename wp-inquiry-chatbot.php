@@ -3,7 +3,7 @@
  * Plugin Name: WP Inquiry Chatbot (ECV Style)
  * Plugin URI: https://github.com/GGdm01/wp-inquiry-chatbot
  * Description: Lightweight, deterministic, ECV-style B2B inquiry & lead generation chatbot for WordPress. Supports English/Chinese bilingual configuration, zero LLM cost, 100% conversion focused, context-aware product lead capture.
- * Version: 1.4.3
+ * Version: 1.4.4
  * Author: GGdm01
  * Text Domain: wp-inquiry-chatbot
  * Domain Path: /languages
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('WPI_VERSION', '1.4.3');
+define('WPI_VERSION', '1.4.4');
 define('WPI_PLUGIN_FILE', __FILE__);
 define('WPI_PATH', plugin_dir_path(__FILE__));
 define('WPI_URL', plugin_dir_url(__FILE__));

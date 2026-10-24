@@ -482,28 +482,90 @@ class WPI_Admin {
         }
 
         // Export Entire Corpus JSON
-        if (isset($_GET['page']) && $_GET['page'] === 'wpi-form-builder' && isset($_GET['action']) && $_GET['action'] === 'export_corpus') {
+        if (isset($_GET['page']) && in_array($_GET['page'], ['wpi-form-builder', 'wpi-settings'], true) && isset($_GET['action']) && $_GET['action'] === 'export_corpus') {
             check_admin_referer('wpi_export_corpus');
             $corpus_data = [
-                'bot_name'           => get_option('wpi_bot_name', 'Sales Specialist'),
-                'welcome_msg'        => get_option('wpi_welcome_msg', ''),
-                'default_welcome_msg'=> get_option('wpi_default_welcome_msg', ''),
-                'form_questions'     => get_option('wpi_form_questions', self::get_default_form_questions()),
-                'faq_list'           => get_option('wpi_faq_list', self::get_default_faqs()),
-                'exported_at'        => current_time('mysql'),
-                'version'            => WPI_VERSION,
+                'bot_name'            => get_option('wpi_bot_name', 'Sales Specialist'),
+                'welcome_msg'         => get_option('wpi_welcome_msg', ''),
+                'default_welcome_msg' => get_option('wpi_default_welcome_msg', ''),
+                'lead_success_msg'    => get_option('wpi_lead_success_msg', ''),
+                'form_questions'      => get_option('wpi_form_questions', self::get_default_form_questions()),
+                'faq_list'            => get_option('wpi_faq_list', self::get_default_faqs()),
+                'exported_at'         => current_time('mysql'),
+                'version'             => WPI_VERSION,
             ];
 
             header('Content-Type: application/json; charset=utf-8');
             header('Content-Disposition: attachment; filename=wp-chatbot-corpus-' . date('Y-m-d') . '.json');
+            header('Pragma: no-cache');
+            header('Expires: 0');
             echo wp_json_encode($corpus_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
             exit;
         }
 
+        // Handle Save Current Corpus as Custom Default Snapshot
+        if (isset($_GET['page']) && in_array($_GET['page'], ['wpi-form-builder', 'wpi-settings'], true) && isset($_GET['action']) && $_GET['action'] === 'save_custom_default') {
+            check_admin_referer('wpi_custom_default_action');
+            $redirect_page = sanitize_key($_GET['page']);
+
+            update_option('wpi_custom_default_questions', get_option('wpi_form_questions', self::get_default_form_questions()));
+            update_option('wpi_custom_default_faqs', get_option('wpi_faq_list', self::get_default_faqs()));
+            update_option('wpi_custom_default_welcome_msg', get_option('wpi_welcome_msg', ''));
+            update_option('wpi_custom_default_default_msg', get_option('wpi_default_welcome_msg', ''));
+            update_option('wpi_custom_default_bot_name', get_option('wpi_bot_name', 'Sales Specialist'));
+            update_option('wpi_custom_default_success_msg', get_option('wpi_lead_success_msg', ''));
+            update_option('wpi_custom_default_saved_at', current_time('mysql'));
+
+            add_settings_error('wpi_messages', 'wpi_custom_saved', '已成功将当前调整好的追问表单流程与 FAQ 规则保存为「站点专属默认预设」！后续发生误改时可随时一键恢复。', 'updated');
+            wp_safe_redirect(admin_url('admin.php?page=' . $redirect_page));
+            exit;
+        }
+
+        // Handle Restore Custom Default Snapshot
+        if (isset($_GET['page']) && in_array($_GET['page'], ['wpi-form-builder', 'wpi-settings'], true) && isset($_GET['action']) && $_GET['action'] === 'restore_custom_default') {
+            check_admin_referer('wpi_custom_default_action');
+            $redirect_page = sanitize_key($_GET['page']);
+            $saved_questions = get_option('wpi_custom_default_questions', null);
+            $saved_at        = get_option('wpi_custom_default_saved_at', '');
+
+            if ($saved_questions === null) {
+                add_settings_error('wpi_messages', 'wpi_custom_error', '尚未保存过「站点专属默认预设」，请先在表单中调整好后点击保存！', 'error');
+            } else {
+                update_option('wpi_form_questions', $saved_questions);
+                $saved_faqs = get_option('wpi_custom_default_faqs', null);
+                if ($saved_faqs !== null) {
+                    update_option('wpi_faq_list', $saved_faqs);
+                }
+                $saved_welcome = get_option('wpi_custom_default_welcome_msg', null);
+                if ($saved_welcome !== null) {
+                    update_option('wpi_welcome_msg', $saved_welcome);
+                }
+                $saved_default = get_option('wpi_custom_default_default_msg', null);
+                if ($saved_default !== null) {
+                    update_option('wpi_default_welcome_msg', $saved_default);
+                }
+                $saved_bot_name = get_option('wpi_custom_default_bot_name', null);
+                if ($saved_bot_name !== null) {
+                    update_option('wpi_bot_name', $saved_bot_name);
+                }
+                $saved_success = get_option('wpi_custom_default_success_msg', null);
+                if ($saved_success !== null) {
+                    update_option('wpi_lead_success_msg', $saved_success);
+                }
+
+                add_settings_error('wpi_messages', 'wpi_custom_restored', sprintf('已成功恢复到于 %s 保存的站点专属默认预设！', esc_html($saved_at)), 'updated');
+            }
+
+            wp_safe_redirect(admin_url('admin.php?page=' . $redirect_page));
+            exit;
+        }
+
         // Handle Preset Switching
-        if (isset($_GET['page']) && $_GET['page'] === 'wpi-form-builder' && isset($_GET['action']) && $_GET['action'] === 'apply_preset' && isset($_GET['preset'])) {
+        if (isset($_GET['page']) && in_array($_GET['page'], ['wpi-form-builder', 'wpi-settings'], true) && isset($_GET['action']) && $_GET['action'] === 'apply_preset' && isset($_GET['preset'])) {
             check_admin_referer('wpi_apply_preset');
             $preset = sanitize_key($_GET['preset']);
+            $redirect_page = sanitize_key($_GET['page']);
+
             if ($preset === 'email_first') {
                 update_option('wpi_form_questions', self::get_email_first_form_questions());
                 add_settings_error('wpi_messages', 'wpi_preset', '已成功应用「英文 - 上来就要邮箱」预设！第一步直接索要带 @ 邮箱并秒级落库推飞书。', 'updated');
@@ -523,7 +585,8 @@ class WPI_Admin {
                 update_option('wpi_faq_list', self::get_default_faqs());
                 add_settings_error('wpi_messages', 'wpi_preset', '已成功重置为「英文常见问答 FAQ 语料库」（MOQ, Sample, Price, Lead Time, Payment, OEM/ODM）。', 'updated');
             }
-            wp_safe_redirect(admin_url('admin.php?page=wpi-form-builder'));
+
+            wp_safe_redirect(admin_url('admin.php?page=' . $redirect_page));
             exit;
         }
 
@@ -692,6 +755,37 @@ class WPI_Admin {
 
             add_settings_error('wpi_messages', 'wpi_saved', '已成功保存机器人核心配置！', 'updated');
         }
+
+        // Handle Corpus JSON Import from Settings Page
+        if (isset($_POST['wpi_import_corpus_settings'])) {
+            check_admin_referer('wpi_save_settings_nonce');
+            if (!empty($_POST['wpi_import_corpus_json'])) {
+                $imported = json_decode(stripslashes($_POST['wpi_import_corpus_json']), true);
+                if (is_array($imported)) {
+                    if (!empty($imported['form_questions']) && is_array($imported['form_questions'])) {
+                        update_option('wpi_form_questions', $imported['form_questions']);
+                    }
+                    if (!empty($imported['faq_list']) && is_array($imported['faq_list'])) {
+                        update_option('wpi_faq_list', $imported['faq_list']);
+                    }
+                    if (!empty($imported['welcome_msg'])) {
+                        update_option('wpi_welcome_msg', sanitize_textarea_field($imported['welcome_msg']));
+                    }
+                    if (!empty($imported['default_welcome_msg'])) {
+                        update_option('wpi_default_welcome_msg', sanitize_textarea_field($imported['default_welcome_msg']));
+                    }
+                    if (!empty($imported['bot_name'])) {
+                        update_option('wpi_bot_name', sanitize_text_field($imported['bot_name']));
+                    }
+                    if (!empty($imported['lead_success_msg'])) {
+                        update_option('wpi_lead_success_msg', sanitize_textarea_field($imported['lead_success_msg']));
+                    }
+                    add_settings_error('wpi_messages', 'wpi_corpus_imported', '已成功从外部 JSON 备份文件恢复整套语料库与表单流程！', 'updated');
+                } else {
+                    add_settings_error('wpi_messages', 'wpi_corpus_import_err', '导入失败：JSON 格式无效，请检查复制的内容。', 'error');
+                }
+            }
+        }
     }
 
     /**
@@ -701,42 +795,18 @@ class WPI_Admin {
         settings_errors('wpi_messages');
         $form_questions = get_option('wpi_form_questions', self::get_default_form_questions());
         $export_url = wp_nonce_url(admin_url('admin.php?page=wpi-form-builder&action=export_corpus'), 'wpi_export_corpus');
+        $save_custom_default_url = wp_nonce_url(admin_url('admin.php?page=wpi-form-builder&action=save_custom_default'), 'wpi_custom_default_action');
         ?>
         <div class="wrap wpi-admin-wrap">
             <h1 class="wp-heading-inline">自定义表单与追问流程</h1>
             <a href="<?php echo esc_url($export_url); ?>" class="page-title-action" style="font-weight:600;">导出完整语料 JSON</a>
+            <a href="<?php echo esc_url($save_custom_default_url); ?>" class="page-title-action" style="font-weight:600;color:#0369a1;" onclick="return confirm('确定将当前调整好的追问表单流程与问答规则保存为专属默认预设吗？');">💾 将当前调整好的设置保存为默认预设</a>
+            <a href="<?php echo esc_url(admin_url('admin.php?page=wpi-settings#wpi-backup-section')); ?>" class="page-title-action" style="font-weight:600;color:#64748b;">语料预设与快照恢复 &rarr;</a>
             <hr class="wp-header-end">
 
             <p style="font-size:14px;color:#475569;margin:12px 0 16px;">
-                可视化配置询盘机器人的多轮发散追问流（Probing Question Flow）。支持即时调整提问话术、快捷选项（Chips）、必填强校验规则及步骤顺序。
+                可视化配置询盘机器人的多轮发散追问流（Probing Question Flow）。支持即时调整提问话术、快捷选项（Chips）、必填强校验规则及步骤顺序。如需切换出厂预设或备份快照，请前往“<a href="<?php echo esc_url(admin_url('admin.php?page=wpi-settings#wpi-backup-section')); ?>">语料预设与快照恢复</a>”。
             </p>
-
-            <?php
-            $email_first_url    = wp_nonce_url(admin_url('admin.php?page=wpi-form-builder&action=apply_preset&preset=email_first'), 'wpi_apply_preset');
-            $probing_url        = wp_nonce_url(admin_url('admin.php?page=wpi-form-builder&action=apply_preset&preset=probing'), 'wpi_apply_preset');
-            $zh_email_first_url = wp_nonce_url(admin_url('admin.php?page=wpi-form-builder&action=apply_preset&preset=zh_email_first'), 'wpi_apply_preset');
-            $zh_probing_url     = wp_nonce_url(admin_url('admin.php?page=wpi-form-builder&action=apply_preset&preset=zh_probing'), 'wpi_apply_preset');
-            $zh_faqs_url        = wp_nonce_url(admin_url('admin.php?page=wpi-form-builder&action=apply_preset&preset=zh_faqs'), 'wpi_apply_preset');
-            $en_faqs_url        = wp_nonce_url(admin_url('admin.php?page=wpi-form-builder&action=apply_preset&preset=en_faqs'), 'wpi_apply_preset');
-            ?>
-            <div style="background:#f0f9ff;border:1px solid #bae6fd;padding:14px 18px;border-radius:8px;margin-bottom:20px;">
-                <div style="margin-bottom:8px;">
-                    <strong style="color:#0369a1;font-size:14px;">快捷业务问答语料预设（点击一键切换策略与语言）：</strong>
-                </div>
-                <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
-                    <span style="font-weight:600;color:#0f172a;margin-right:2px;">中文模式：</span>
-                    <a href="<?php echo esc_url($zh_email_first_url); ?>" class="button button-primary" style="background:#0284c7;border-color:#0284c7;" onclick="return confirm('确定应用「中文 - 邮箱/微信前置」预设吗？将覆盖当前表单问题。');">启用「中文 - 邮箱/微信前置」模式 (推荐)</a>
-                    <a href="<?php echo esc_url($zh_probing_url); ?>" class="button button-secondary" onclick="return confirm('确定应用「中文 - 渐进式探询」预设吗？将覆盖当前表单问题。');">启用「中文 - 渐进式探询」模式</a>
-                    <a href="<?php echo esc_url($zh_faqs_url); ?>" class="button button-secondary" onclick="return confirm('确定重置为中文常见问答 FAQ 语料库吗？将覆盖当前 FAQ 列表。');">加载中文 FAQ 语料</a>
-                </div>
-                <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px dashed #bae6fd;">
-                    <span style="font-weight:600;color:#0f172a;margin-right:2px;">英文外贸：</span>
-                    <a href="<?php echo esc_url($email_first_url); ?>" class="button button-secondary" onclick="return confirm('确定应用「英文 - 上来就要邮箱」预设吗？将覆盖当前表单问题。');">启用「英文 - 上来就要邮箱」模式 (推荐)</a>
-                    <a href="<?php echo esc_url($probing_url); ?>" class="button button-secondary" onclick="return confirm('确定应用「英文 - 渐进式多轮探询」预设吗？将覆盖当前表单问题。');">启用「英文 - 渐进式多轮探询」模式</a>
-                    <a href="<?php echo esc_url($en_faqs_url); ?>" class="button button-secondary" onclick="return confirm('确定重置为英文常见问答 FAQ 语料库吗？将覆盖当前 FAQ 列表。');">加载英文 FAQ 语料</a>
-                </div>
-            </div>
-
             <form method="post" action="" id="wpi-form-builder-form">
                 <?php wp_nonce_field('wpi_save_form_nonce'); ?>
 
@@ -1167,6 +1237,17 @@ class WPI_Admin {
         $webhook_url    = get_option('wpi_webhook_url', '');
         $webhook_secret = get_option('wpi_webhook_secret', '');
         $faq_list       = get_option('wpi_faq_list', self::get_default_faqs());
+        $custom_default_saved_at = get_option('wpi_custom_default_saved_at', '');
+        $save_custom_default_url = wp_nonce_url(admin_url('admin.php?page=wpi-settings&action=save_custom_default'), 'wpi_custom_default_action');
+        $restore_custom_default_url = wp_nonce_url(admin_url('admin.php?page=wpi-settings&action=restore_custom_default'), 'wpi_custom_default_action');
+        $export_corpus_url = wp_nonce_url(admin_url('admin.php?page=wpi-settings&action=export_corpus'), 'wpi_export_corpus');
+
+        $email_first_url    = wp_nonce_url(admin_url('admin.php?page=wpi-settings&action=apply_preset&preset=email_first'), 'wpi_apply_preset');
+        $probing_url        = wp_nonce_url(admin_url('admin.php?page=wpi-settings&action=apply_preset&preset=probing'), 'wpi_apply_preset');
+        $zh_email_first_url = wp_nonce_url(admin_url('admin.php?page=wpi-settings&action=apply_preset&preset=zh_email_first'), 'wpi_apply_preset');
+        $zh_probing_url     = wp_nonce_url(admin_url('admin.php?page=wpi-settings&action=apply_preset&preset=zh_probing'), 'wpi_apply_preset');
+        $zh_faqs_url        = wp_nonce_url(admin_url('admin.php?page=wpi-settings&action=apply_preset&preset=zh_faqs'), 'wpi_apply_preset');
+        $en_faqs_url        = wp_nonce_url(admin_url('admin.php?page=wpi-settings&action=apply_preset&preset=en_faqs'), 'wpi_apply_preset');
         ?>
         <div class="wrap wpi-admin-wrap">
             <h1>询盘机器人核心设置</h1>
@@ -1363,6 +1444,94 @@ class WPI_Admin {
                     <button type="submit" name="wpi_save_settings" class="button button-primary button-large" style="padding:4px 28px;font-size:14px;font-weight:600;">保存机器人设置</button>
                 </p>
             </form>
+
+            <!-- 语料预设切换、自定义默认快照与数据备份卡片 -->
+            <div id="wpi-backup-section" style="margin-top:35px;background:#ffffff;border:1px solid #cbd5e1;border-radius:8px;padding:22px 24px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+                <h2 style="margin-top:0;font-size:17px;color:#0f172a;border-bottom:1px solid #f1f5f9;padding-bottom:12px;">
+                    语料预设切换、自定义默认快照与数据备份
+                </h2>
+
+                <!-- 1. 自定义默认预设（快照保存与一键恢复） -->
+                <div style="margin-top:16px;padding:16px 18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;">
+                    <h3 style="margin:0 0 6px;font-size:14px;color:#1e293b;font-weight:700;">
+                        1. 站点专属默认预设（保存当前微调好的配置，以便后续随时恢复）
+                    </h3>
+                    <p style="margin:0 0 12px;font-size:13px;color:#64748b;line-height:1.5;">
+                        当您在「表单与追问流程」以及「FAQ 规则」中微调好满足自身业务的问答流后，可点击下方按钮保存为本站专属的“自定义默认预设”。后续无论日常维护、多语言测试或发生误操作，均可一键恢复回此快照。
+                    </p>
+                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                        <a href="<?php echo esc_url($save_custom_default_url); ?>" class="button button-secondary" onclick="return confirm('确定将当前在线的追问表单、问答规则与开场白保存为专属默认预设吗？');" style="font-weight:600;color:#0369a1;">
+                            💾 将当前调整好的设置保存为默认预设
+                        </a>
+                        <?php if (!empty($custom_default_saved_at)) : ?>
+                            <a href="<?php echo esc_url($restore_custom_default_url); ?>" class="button button-secondary" onclick="return confirm('⚠️ 警告：确定恢复到于 <?php echo esc_js($custom_default_saved_at); ?> 保存的默认预设吗？当前在线修改将被覆盖。');" style="font-weight:600;color:#b45309;">
+                                🔄 恢复为自定义默认预设
+                            </a>
+                            <span style="font-size:12.5px;color:#16a34a;font-weight:600;">
+                                ✓ 已保存快照 (<?php echo esc_html($custom_default_saved_at); ?>)
+                            </span>
+                        <?php else : ?>
+                            <button type="button" class="button button-secondary" disabled style="color:#94a3b8;cursor:not-allowed;">
+                                🔄 恢复为自定义默认预设 (尚未保存快照)
+                            </button>
+                            <span style="font-size:12.5px;color:#94a3b8;">
+                                尚未保存过快照
+                            </span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- 2. JSON 完整备份与跨站导入恢复 -->
+                <div style="margin-top:16px;padding:16px 18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;">
+                    <h3 style="margin:0 0 6px;font-size:14px;color:#1e293b;font-weight:700;">
+                        2. 语料库 JSON 文件备份与跨站恢复 (Backup & Restore)
+                    </h3>
+                    <p style="margin:0 0 12px;font-size:13px;color:#64748b;line-height:1.5;">
+                        支持将整套追问表单流程、FAQ 问答、开场白导出为单份 <code>.json</code> 备份文件，便于本地长期存档或导入到其他 WordPress 独立站。
+                    </p>
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                        <a href="<?php echo esc_url($export_corpus_url); ?>" class="button button-secondary" style="font-weight:600;">
+                            📥 导出完整语料 JSON 备份文件
+                        </a>
+                    </div>
+                    <details style="font-size:12px;color:#475569;">
+                        <summary style="cursor:pointer;color:#0284c7;font-weight:600;">从外部 JSON 备份文件导入恢复 (点击展开)</summary>
+                        <form method="post" action="" style="margin-top:10px;">
+                            <?php wp_nonce_field('wpi_save_settings_nonce'); ?>
+                            <textarea name="wpi_import_corpus_json" rows="4" class="large-text code" placeholder='{"form_questions": [...], "faq_list": [...]}' style="margin-bottom:8px;"></textarea>
+                            <button type="submit" name="wpi_import_corpus_settings" class="button button-secondary" onclick="return confirm('⚠️ 确定从粘贴的 JSON 覆盖恢复当前所有追问与 FAQ 吗？此操作无法撤销。');">
+                                📤 导入并覆盖恢复
+                            </button>
+                        </form>
+                    </details>
+                </div>
+
+                <!-- 3. 官方出厂业务问答语料预设（收纳折叠，防止误触） -->
+                <div style="margin-top:16px;padding:14px 18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;">
+                    <details>
+                        <summary style="cursor:pointer;font-weight:600;color:#64748b;font-size:13px;">
+                            ⚙️ 官方出厂业务问答语料预设（点击展开切换，防止误触）
+                        </summary>
+                        <div style="margin-top:12px;padding-top:12px;border-top:1px dashed #cbd5e1;">
+                            <p style="font-size:12.5px;color:#dc2626;margin:0 0 12px;font-weight:600;">
+                                ⚠️ 注意：应用官方预设将会覆盖当前正在使用的在线表单与语料！如需切换，建议先在上方点击「将当前配置保存为默认预设」或「导出 JSON 备份」。
+                            </p>
+                            <div style="margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                                <strong style="font-size:13px;color:#0f172a;min-width:80px;">中文模式：</strong>
+                                <a href="<?php echo esc_url($zh_email_first_url); ?>" class="button button-small" onclick="return confirm('⚠️ 警告：应用此预设将覆盖当前表单问题！确定切换为「中文 - 邮箱/微信前置」模式吗？');">启用「中文 - 邮箱/微信前置」模式 (推荐)</a>
+                                <a href="<?php echo esc_url($zh_probing_url); ?>" class="button button-small" onclick="return confirm('⚠️ 警告：应用此预设将覆盖当前表单问题！确定切换为「中文 - 渐进式探询」模式吗？');">启用「中文 - 渐进式探询」模式</a>
+                                <a href="<?php echo esc_url($zh_faqs_url); ?>" class="button button-small" onclick="return confirm('⚠️ 警告：将重置覆盖当前 FAQ 列表！确定加载中文 FAQ 语料吗？');">加载中文 FAQ 语料</a>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                                <strong style="font-size:13px;color:#0f172a;min-width:80px;">英文外贸：</strong>
+                                <a href="<?php echo esc_url($email_first_url); ?>" class="button button-small" onclick="return confirm('⚠️ 警告：应用此预设将覆盖当前表单问题！确定切换为「英文 - 上来就要邮箱」模式吗？');">启用「英文 - 上来就要邮箱」模式 (推荐)</a>
+                                <a href="<?php echo esc_url($probing_url); ?>" class="button button-small" onclick="return confirm('⚠️ 警告：应用此预设将覆盖当前表单问题！确定切换为「英文 - 渐进式多轮探询」模式吗？');">启用「英文 - 渐进式多轮探询」模式</a>
+                                <a href="<?php echo esc_url($en_faqs_url); ?>" class="button button-small" onclick="return confirm('⚠️ 警告：将重置覆盖当前 FAQ 列表！确定加载英文 FAQ 语料吗？');">加载英文 FAQ 语料</a>
+                            </div>
+                        </div>
+                    </details>
+                </div>
+            </div>
         </div>
 
         <script>

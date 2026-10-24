@@ -6,7 +6,7 @@
 [![WordPress](https://img.shields.io/badge/WordPress-5.6%2B-blue.svg)](https://wordpress.org)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)](https://php.net)
 [![License](https://img.shields.io/badge/License-GPLv2-green.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/Release-v1.4.3-orange.svg)](https://github.com/GGdm01/wp-inquiry-chatbot/releases)
+[![Release](https://img.shields.io/badge/Release-v1.4.4-orange.svg)](https://github.com/GGdm01/wp-inquiry-chatbot/releases)
 
 ---
 
@@ -111,7 +111,7 @@ CREATE TABLE wp_inquiry_leads (
     "dwell_sec": 42,
     "referrer": "https://google.com/"
   },
-  "form_version": "1.4.3"
+  "form_version": "1.4.4"
 }
 ```
 
