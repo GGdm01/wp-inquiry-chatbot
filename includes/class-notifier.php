@@ -250,6 +250,11 @@ class WPI_Notifier {
         if (preg_match('/(bracket|rack|支架)/i', $q_lower)) return '安装支架';
         if (preg_match('/(processor|controller|signal|处理|信号)/i', $q_lower)) return '拼接处理';
         if (preg_match('/(table|桌体|茶几)/i', $q_lower)) return '桌体结构';
+        if (preg_match('/(station_type|solar_bench|charging_station|solar.*station|光伏座椅|充电站)/i', $q_lower)) return '设备形态';
+        if (preg_match('/(solar_battery|solar_power|autonomy|光伏储能|电池续航)/i', $q_lower)) return '光伏储能';
+        if (preg_match('/(battery_type|battery|电池)/i', $q_lower)) return '电池规格';
+        if (preg_match('/(charging_ports|wireless|usb_ports|port|充电接口|无线充电)/i', $q_lower)) return '充电接口';
+        if (preg_match('/(smart_iot|auxiliary|hotspot|智慧物联|附加功能)/i', $q_lower)) return '智慧功能';
         if (preg_match('/(installation|enclosure|form_factor|structure|base|mounting|形态|结构|底座|安装)/i', $q_lower)) return '安装形态';
         if (preg_match('/(brightness.*cooling|cooling.*brightness|亮度.*散热)/i', $q_lower)) return '亮度与散热';
         if (preg_match('/(cooling|thermal|heat|散热|空调|风冷)/i', $q_lower)) return '散热方式';
