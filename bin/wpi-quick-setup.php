@@ -740,6 +740,12 @@ if (class_exists('\Seraphinite\Accelerator\Api') && method_exists('\Seraphinite\
     echo "  \033[1;32m✓\033[0m Seraphinite Accelerator 已清空\n";
 }
 
+// 5. WP Rocket
+if (function_exists('rocket_clean_domain')) {
+    rocket_clean_domain();
+    echo "  \033[1;32m✓\033[0m WP Rocket Cache 已彻底清理\n";
+}
+
 // 5. 递归清理 wp-content/cache 目录下的残留静态 HTML
 $cache_dir = WP_CONTENT_DIR . '/cache';
 if (is_dir($cache_dir)) {
