@@ -1,0 +1,17 @@
+{
+  "name": "WP Inquiry Chatbot",
+  "slug": "wp-inquiry-chatbot",
+  "version": "1.4.2",
+  "author": "GGdm01",
+  "author_profile": "https://github.com/GGdm01",
+  "homepage": "https://github.com/GGdm01/wp-inquiry-chatbot",
+  "requires": "5.6",
+  "tested": "6.7",
+  "requires_php": "7.4",
+  "last_updated": "2026-10-24 10:00:00",
+  "download_url": "https://github.com/GGdm01/wp-inquiry-chatbot/archive/refs/heads/main.zip",
+  "sections": {
+    "description": "Lightweight, deterministic, ECV-style B2B inquiry & lead generation chatbot for WordPress. 100% conversion focused, direct email gate, zero LLM cost, instant notifications.",
+    "changelog": "<h4>1.4.2 (2026-10-24)</h4><ul><li>Added native 1-click and background automatic update capability.</li><li>Optimized 10-field database schema and payload_json unification.</li><li>Compact single-screen Feishu interactive card without redundant action buttons.</li></ul><h4>1.4.1</h4><ul><li>Fixed mobile viewport flex layout and generic page greetings.</li></ul><h4>1.4.0</h4><ul><li>Bilingual English/Chinese configuration and presets.</li></ul>"
+  }
+}

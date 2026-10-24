@@ -1,0 +1,39 @@
+# Translation template for WP Inquiry Chatbot
+# Copyright (C) 2026 GGdm01
+# This file is distributed under the same license as the WP Inquiry Chatbot plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: WP Inquiry Chatbot 1.4.2\n"
+"Report-Msgid-Bugs-To: https://github.com/GGdm01/wp-inquiry-chatbot\n"
+"POT-Creation-Date: 2026-10-23 00:00+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2026-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"X-Generator: WP Inquiry Chatbot POT Exporter\n"
+
+#: wp-inquiry-chatbot.php:4
+msgid "WP Inquiry Chatbot (ECV Style)"
+msgstr ""
+
+#: wp-inquiry-chatbot.php:5
+msgid "Lightweight, deterministic, ECV-style B2B inquiry & lead generation chatbot for WordPress. Supports English/Chinese bilingual configuration, zero LLM cost, 100% conversion focused, context-aware product lead capture."
+msgstr ""
+
+#: includes/class-admin.php:175
+msgid "Inquiry Leads"
+msgstr ""
+
+#: includes/class-admin.php:183
+msgid "All Inquiries"
+msgstr ""
+
+#: includes/class-admin.php:191
+msgid "Form & Questions (表单语料)"
+msgstr ""
+
+#: includes/class-admin.php:199
+msgid "Chatbot Settings"
+msgstr ""

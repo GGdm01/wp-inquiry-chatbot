@@ -1,0 +1,301 @@
+/* WP Inquiry Chatbot (ECV Style) Floating Widget */
+:root {
+    --wpi-primary: #1d4ed8;
+    --wpi-primary-hover: #1e40af;
+    --wpi-primary-light: #eff6ff;
+    --wpi-text: #1f2937;
+    --wpi-text-muted: #6b7280;
+    --wpi-bg: #ffffff;
+    --wpi-border: #e5e7eb;
+    --wpi-radius: 16px;
+    --wpi-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+.wpi-widget-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 999999;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--wpi-text);
+}
+
+/* Launcher Button */
+.wpi-launcher-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--wpi-primary);
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(29, 78, 216, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease;
+}
+
+.wpi-launcher-btn:hover {
+    transform: scale(1.06);
+    background: var(--wpi-primary-hover);
+}
+
+.wpi-badge-dot {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 14px;
+    height: 14px;
+    background: #ef4444;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+}
+
+/* Chatbox Window */
+.wpi-chatbox {
+    position: absolute;
+    bottom: 76px;
+    right: 0;
+    width: 380px;
+    max-width: calc(100vw - 32px);
+    height: 540px;
+    max-height: calc(100vh - 120px);
+    background: var(--wpi-bg);
+    border-radius: var(--wpi-radius);
+    box-shadow: var(--wpi-shadow);
+    border: 1px solid var(--wpi-border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: wpi-fade-in 0.25s ease-out;
+}
+
+@keyframes wpi-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Header */
+.wpi-header {
+    background: var(--wpi-primary);
+    color: #ffffff;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.wpi-header-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.wpi-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.wpi-title {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.wpi-status {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.85);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+}
+
+.wpi-status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #22c55e;
+}
+
+.wpi-header-btn {
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.8;
+    padding: 0 4px;
+}
+.wpi-header-btn:hover {
+    opacity: 1;
+}
+
+/* Context Banner (Product Preview) */
+.wpi-context-banner {
+    background: #f8fafc;
+    border-bottom: 1px solid var(--wpi-border);
+    padding: 8px 14px;
+    font-size: 12px;
+}
+
+.wpi-context-tag {
+    font-size: 10px;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--wpi-primary);
+    letter-spacing: 0.5px;
+}
+
+.wpi-context-title {
+    font-weight: 600;
+    color: var(--wpi-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-top: 2px;
+}
+
+/* Messages Stream */
+.wpi-messages {
+    flex: 1;
+    padding: 14px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #fdfdfd;
+}
+
+.wpi-msg {
+    max-width: 85%;
+    font-size: 13.5px;
+    line-height: 1.45;
+    padding: 10px 14px;
+    border-radius: 14px;
+    word-break: break-word;
+}
+
+.wpi-msg-bot {
+    align-self: flex-start;
+    background: #f1f5f9;
+    color: #0f172a;
+    border-bottom-left-radius: 4px;
+}
+
+.wpi-msg-user {
+    align-self: flex-end;
+    background: var(--wpi-primary);
+    color: #ffffff;
+    border-bottom-right-radius: 4px;
+}
+
+/* Action Chips */
+.wpi-actions {
+    padding: 8px 14px 10px 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    background: #ffffff;
+    border-top: 1px solid #f1f5f9;
+}
+
+.wpi-chip-btn {
+    background: #ffffff;
+    color: var(--wpi-primary);
+    border: 1px solid #cbd5e1;
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: left;
+}
+
+.wpi-chip-btn:hover {
+    background: var(--wpi-primary-light);
+    border-color: var(--wpi-primary);
+    color: var(--wpi-primary-hover);
+}
+
+/* Input Bar */
+.wpi-input-bar {
+    padding: 10px 14px;
+    background: #ffffff;
+    border-top: 1px solid var(--wpi-border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.wpi-input-bar input {
+    flex: 1;
+    border: 1px solid #d1d5db;
+    border-radius: 20px;
+    padding: 8px 14px;
+    font-size: 13px;
+    outline: none;
+    box-shadow: none;
+}
+
+.wpi-input-bar input:focus {
+    border-color: var(--wpi-primary);
+    box-shadow: 0 0 0 2px var(--wpi-primary-light);
+}
+
+.wpi-input-bar button {
+    background: var(--wpi-primary);
+    color: #ffffff;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background-color 0.15s ease;
+}
+
+.wpi-input-bar button:hover {
+    background: var(--wpi-primary-hover);
+}
+
+.wpi-footer-note {
+    font-size: 10px;
+    color: var(--wpi-text-muted);
+    text-align: center;
+    padding-bottom: 6px;
+    background: #ffffff;
+}
+
+/* Mobile full-width optimization */
+@media (max-width: 480px) {
+    .wpi-widget-container {
+        bottom: 16px;
+        right: 16px;
+    }
+    .wpi-chatbox {
+        bottom: 70px;
+        right: 0;
+        width: calc(100vw - 32px);
+        height: calc(100vh - 100px);
+    }
+}
