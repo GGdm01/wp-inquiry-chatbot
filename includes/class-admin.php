@@ -344,7 +344,7 @@ class WPI_Admin {
         $badge = $new_count > 0 ? sprintf(' <span class="awaiting-mod">%d</span>', $new_count) : '';
 
         add_menu_page(
-            '询盘线索 (Inquiry Leads)',
+            '询盘线索',
             '询盘线索' . $badge,
             'manage_options',
             'wpi-leads',
@@ -355,7 +355,7 @@ class WPI_Admin {
 
         add_submenu_page(
             'wpi-leads',
-            '全部询盘工单',
+            '全部工单',
             '全部工单',
             'manage_options',
             'wpi-leads',
@@ -364,7 +364,7 @@ class WPI_Admin {
 
         add_submenu_page(
             'wpi-leads',
-            '表单与追问语料 (Form & Questions)',
+            '表单与追问流程',
             '表单与语料',
             'manage_options',
             'wpi-form-builder',
@@ -373,7 +373,7 @@ class WPI_Admin {
 
         add_submenu_page(
             'wpi-leads',
-            '机器人设置 (Chatbot Settings)',
+            '机器人核心设置',
             '机器人设置',
             'manage_options',
             'wpi-settings',
@@ -544,7 +544,7 @@ class WPI_Admin {
                 update_option('wpi_welcome_msg', 'Hi! Looking for factory-direct wholesale prices or CAD specs for "{product_name}"?');
                 update_option('wpi_default_welcome_msg', 'Hi there! Welcome to our official site. How can we help your project today?');
                 update_option('wpi_lead_success_msg', 'Thank you! Our engineering and sales team will contact you within 2 hours with the specs and quotation.');
-                add_settings_error('wpi_messages', 'wpi_i18n_loaded', 'Language set to English and loaded default English greetings.', 'updated');
+                add_settings_error('wpi_messages', 'wpi_i18n_loaded', '已切换为英文模式，并成功重置为英文预设问候语与客服名称。', 'updated');
             }
             wp_safe_redirect(admin_url('admin.php?page=wpi-settings'));
             exit;
@@ -569,7 +569,45 @@ class WPI_Admin {
         if (isset($_POST['wpi_save_form_builder'])) {
             check_admin_referer('wpi_save_form_nonce');
 
-            if (!empty($_POST['wpi_form_questions_json'])) {
+            if (isset($_POST['visual_questions']) && is_array($_POST['visual_questions'])) {
+                $cleaned_questions = [];
+                foreach ($_POST['visual_questions'] as $q) {
+                    $id = sanitize_key($q['id'] ?? '');
+                    if (empty($id)) {
+                        continue;
+                    }
+                    $options_raw = $q['options'] ?? '';
+                    $options = [];
+                    if (is_array($options_raw)) {
+                        $options = array_map('sanitize_text_field', $options_raw);
+                    } elseif (is_string($options_raw) && trim($options_raw) !== '') {
+                        $parts = preg_split('/[,，\n\r]+/', $options_raw);
+                        foreach ($parts as $p) {
+                            $p = trim($p);
+                            if ($p !== '') {
+                                $options[] = sanitize_text_field($p);
+                            }
+                        }
+                    }
+
+                    $type = sanitize_key($q['type'] ?? 'choice_or_text');
+                    $require_at = !empty($q['require_at_email']) || $type === 'email' || $type === 'name_email';
+
+                    $cleaned_questions[] = [
+                        'id'               => $id,
+                        'question'         => sanitize_textarea_field($q['question'] ?? ''),
+                        'type'             => $type,
+                        'options'          => $options,
+                        'required'         => !empty($q['required']) || $require_at,
+                        'require_at_email' => $require_at,
+                        'prompt_error'     => sanitize_text_field($q['prompt_error'] ?? ''),
+                        'placeholder'      => sanitize_text_field($q['placeholder'] ?? ''),
+                    ];
+                }
+                if (!empty($cleaned_questions)) {
+                    update_option('wpi_form_questions', $cleaned_questions);
+                }
+            } elseif (!empty($_POST['wpi_form_questions_json'])) {
                 $decoded = json_decode(stripslashes($_POST['wpi_form_questions_json']), true);
                 if (is_array($decoded)) {
                     update_option('wpi_form_questions', $decoded);
@@ -594,7 +632,7 @@ class WPI_Admin {
                 }
             }
 
-            add_settings_error('wpi_messages', 'wpi_form_saved', 'Custom form questions & corpus updated successfully.', 'updated');
+            add_settings_error('wpi_messages', 'wpi_form_saved', '已成功保存追问表单流程与语料配置！', 'updated');
         }
 
         // Handle General Settings Save
@@ -620,32 +658,57 @@ class WPI_Admin {
             if (isset($_POST['wpi_update_token'])) {
                 update_option('wpi_update_token', sanitize_text_field($_POST['wpi_update_token']));
             }
-            if (!empty($_POST['wpi_faq_json'])) {
+            if (isset($_POST['visual_faqs']) && is_array($_POST['visual_faqs'])) {
+                $cleaned_faqs = [];
+                foreach ($_POST['visual_faqs'] as $faq) {
+                    $kw_raw = $faq['keywords'] ?? '';
+                    $keywords = [];
+                    if (is_array($kw_raw)) {
+                        $keywords = array_map('sanitize_text_field', $kw_raw);
+                    } elseif (is_string($kw_raw) && trim($kw_raw) !== '') {
+                        $parts = preg_split('/[,，\n\r]+/', $kw_raw);
+                        foreach ($parts as $p) {
+                            $p = trim($p);
+                            if ($p !== '') {
+                                $keywords[] = sanitize_text_field($p);
+                            }
+                        }
+                    }
+                    $answer = sanitize_textarea_field($faq['answer'] ?? '');
+                    if (!empty($keywords) && !empty($answer)) {
+                        $cleaned_faqs[] = [
+                            'keywords' => $keywords,
+                            'answer'   => $answer,
+                        ];
+                    }
+                }
+                update_option('wpi_faq_list', $cleaned_faqs);
+            } elseif (!empty($_POST['wpi_faq_json'])) {
                 $decoded_faq = json_decode(stripslashes($_POST['wpi_faq_json']), true);
                 if (is_array($decoded_faq)) {
                     update_option('wpi_faq_list', $decoded_faq);
                 }
             }
 
-            add_settings_error('wpi_messages', 'wpi_saved', 'Settings saved successfully.', 'updated');
+            add_settings_error('wpi_messages', 'wpi_saved', '已成功保存机器人核心配置！', 'updated');
         }
     }
 
     /**
-     * Custom Form & Question Builder Page
+     * Custom Form & Question Builder Page (交互式可视化表单流程编辑器)
      */
     public static function render_form_builder_page() {
         settings_errors('wpi_messages');
         $form_questions = get_option('wpi_form_questions', self::get_default_form_questions());
         $export_url = wp_nonce_url(admin_url('admin.php?page=wpi-form-builder&action=export_corpus'), 'wpi_export_corpus');
         ?>
-        <div class="wrap">
-            <h1 class="wp-heading-inline">Custom Form & Probing Questions (发散提问与自定义表单)</h1>
-            <a href="<?php echo esc_url($export_url); ?>" class="page-title-action">Export Entire Corpus (导出语料库 JSON)</a>
+        <div class="wrap wpi-admin-wrap">
+            <h1 class="wp-heading-inline">自定义表单与追问流程</h1>
+            <a href="<?php echo esc_url($export_url); ?>" class="page-title-action" style="font-weight:600;">导出完整语料 JSON</a>
             <hr class="wp-header-end">
 
-            <p style="font-size:14px;color:#4b5563;">
-                配置机器人的发散追问流（Probing Question Flow）。支持配置<strong>必填带 @ 的邮箱校验</strong>、多选项卡片以及自定义开放式业务提问。
+            <p style="font-size:14px;color:#475569;margin:12px 0 16px;">
+                可视化配置询盘机器人的多轮发散追问流（Probing Question Flow）。支持即时调整提问话术、快捷选项（Chips）、必填强校验规则及步骤顺序。
             </p>
 
             <?php
@@ -656,7 +719,7 @@ class WPI_Admin {
             $zh_faqs_url        = wp_nonce_url(admin_url('admin.php?page=wpi-form-builder&action=apply_preset&preset=zh_faqs'), 'wpi_apply_preset');
             $en_faqs_url        = wp_nonce_url(admin_url('admin.php?page=wpi-form-builder&action=apply_preset&preset=en_faqs'), 'wpi_apply_preset');
             ?>
-            <div style="background:#f0f9ff;border:1px solid #bae6fd;padding:14px 18px;border-radius:8px;margin-bottom:18px;">
+            <div style="background:#f0f9ff;border:1px solid #bae6fd;padding:14px 18px;border-radius:8px;margin-bottom:20px;">
                 <div style="margin-bottom:8px;">
                     <strong style="color:#0369a1;font-size:14px;">快捷业务问答语料预设（点击一键切换策略与语言）：</strong>
                 </div>
@@ -668,74 +731,297 @@ class WPI_Admin {
                 </div>
                 <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px dashed #bae6fd;">
                     <span style="font-weight:600;color:#0f172a;margin-right:2px;">英文外贸：</span>
-                    <a href="<?php echo esc_url($email_first_url); ?>" class="button button-secondary" onclick="return confirm('Apply English Email-First upfront preset? This will overwrite current form questions.');">启用「英文 - 上来就要邮箱」模式</a>
-                    <a href="<?php echo esc_url($probing_url); ?>" class="button button-secondary" onclick="return confirm('Apply English Probing questions preset? This will overwrite current form questions.');">启用「英文 - 渐进式多轮探询」模式</a>
-                    <a href="<?php echo esc_url($en_faqs_url); ?>" class="button button-secondary" onclick="return confirm('Reset to English default FAQs? This will overwrite current FAQ list.');">加载英文 FAQ 语料</a>
+                    <a href="<?php echo esc_url($email_first_url); ?>" class="button button-secondary" onclick="return confirm('确定应用「英文 - 上来就要邮箱」预设吗？将覆盖当前表单问题。');">启用「英文 - 上来就要邮箱」模式 (推荐)</a>
+                    <a href="<?php echo esc_url($probing_url); ?>" class="button button-secondary" onclick="return confirm('确定应用「英文 - 渐进式多轮探询」预设吗？将覆盖当前表单问题。');">启用「英文 - 渐进式多轮探询」模式</a>
+                    <a href="<?php echo esc_url($en_faqs_url); ?>" class="button button-secondary" onclick="return confirm('确定重置为英文常见问答 FAQ 语料库吗？将覆盖当前 FAQ 列表。');">加载英文 FAQ 语料</a>
                 </div>
             </div>
 
-            <form method="post" action="">
+            <form method="post" action="" id="wpi-form-builder-form">
                 <?php wp_nonce_field('wpi_save_form_nonce'); ?>
 
-                <div style="background:#ffffff;border:1px solid #ccd0d4;padding:16px 20px;border-radius:8px;margin-bottom:20px;">
-                    <h2 style="margin-top:0;">正在启用的发散追问表单列表</h2>
-                    <table class="widefat fixed striped" style="margin-top:10px;">
-                        <thead>
-                            <tr>
-                                <th style="width:50px;">顺序</th>
-                                <th style="width:120px;">字段 ID</th>
-                                <th>追问话术 (支持 {product_name} 占位符)</th>
-                                <th style="width:140px;">问题类型</th>
-                                <th style="width:220px;">选项 / 校验规则</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($form_questions as $index => $q) : ?>
-                                <tr>
-                                    <td><strong>#<?php echo $index + 1; ?></strong></td>
-                                    <td><code><?php echo esc_html($q['id']); ?></code></td>
-                                    <td><strong><?php echo esc_html($q['question']); ?></strong></td>
-                                    <td>
-                                        <span style="background:#e0f2fe;color:#0369a1;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;">
-                                            <?php echo esc_html($q['type']); ?>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <?php if (!empty($q['require_at_email'])) : ?>
-                                            <span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">
-                                                强校验: 必须包含 @
-                                            </span>
-                                        <?php elseif (!empty($q['options'])) : ?>
-                                            <span style="font-size:11px;color:#4b5563;">
-                                                <?php echo count($q['options']); ?> 个快捷选项 (Chips)
-                                            </span>
-                                        <?php else : ?>
-                                            <span style="color:#9ca3af;font-size:11px;">自由文本</span>
-                                        <?php endif; ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                <div style="margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;">
+                    <h2 style="margin:0;font-size:17px;color:#1e293b;">追问步骤流程列表 (<span id="wpi-steps-total-count"><?php echo count($form_questions); ?></span> 步)</h2>
+                    <span class="description" style="font-size:13px;color:#64748b;">支持通过右侧按钮上移、下移调整客户答题顺序</span>
                 </div>
 
-                <div style="background:#ffffff;border:1px solid #ccd0d4;padding:16px 20px;border-radius:8px;margin-bottom:20px;">
-                    <h2 style="margin-top:0;">编写与编辑发散问答流 (JSON 格式)</h2>
-                    <p class="description">你可以直接在这里修改问题文案、添加新的追问环节或修改快捷选项：</p>
-                    <textarea name="wpi_form_questions_json" rows="14" class="large-text code"><?php echo esc_textarea(wp_json_encode($form_questions, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)); ?></textarea>
+                <!-- 可视化步骤卡片列表容器 -->
+                <div id="wpi-questions-list">
+                    <?php foreach ($form_questions as $index => $q) :
+                        $q_type = $q['type'] ?? 'choice_or_text';
+                        $q_options = is_array($q['options'] ?? null) ? implode(', ', $q['options']) : ($q['options'] ?? '');
+                        $is_strict_email = !empty($q['require_at_email']) || $q_type === 'email' || $q_type === 'name_email';
+                    ?>
+                        <div class="wpi-question-card" data-index="<?php echo $index; ?>" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:8px;padding:16px 20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #f1f5f9;">
+                                <div style="display:flex;align-items:center;gap:10px;overflow:hidden;">
+                                    <span class="wpi-step-badge" style="background:#0284c7;color:#ffffff;font-size:12px;font-weight:700;padding:2px 10px;border-radius:12px;white-space:nowrap;">
+                                        步骤 #<span class="wpi-step-num"><?php echo $index + 1; ?></span>
+                                    </span>
+                                    <strong class="wpi-q-summary" style="font-size:14px;color:#1e293b;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;">
+                                        <?php echo esc_html(wp_strip_all_tags($q['question'] ?: ($q['id'] ?? '未命名追问'))); ?>
+                                    </strong>
+                                </div>
+                                <div class="wpi-q-actions" style="display:flex;gap:6px;flex-shrink:0;">
+                                    <button type="button" class="button button-small wpi-btn-up" title="上移此题" <?php echo $index === 0 ? 'disabled' : ''; ?>>↑ 上移</button>
+                                    <button type="button" class="button button-small wpi-btn-down" title="下移此题" <?php echo $index === count($form_questions) - 1 ? 'disabled' : ''; ?>>↓ 下移</button>
+                                    <button type="button" class="button button-small button-link-delete wpi-btn-del" title="删除此题">✕ 删除</button>
+                                </div>
+                            </div>
+
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px;">
+                                <div>
+                                    <label style="font-weight:600;display:block;margin-bottom:4px;color:#334155;font-size:13px;">步骤字段标识 (ID)：</label>
+                                    <input type="text" name="visual_questions[<?php echo $index; ?>][id]" value="<?php echo esc_attr($q['id'] ?? ''); ?>" class="regular-text wpi-q-id-input" style="width:100%;" placeholder="例如：email, whatsapp_contact, screen_size" required>
+                                    <span class="description" style="font-size:12px;">全局唯一英文键名，如 <code>email</code>、<code>whatsapp_contact</code></span>
+                                </div>
+                                <div>
+                                    <label style="font-weight:600;display:block;margin-bottom:4px;color:#334155;font-size:13px;">提问交互类型 (Type)：</label>
+                                    <select name="visual_questions[<?php echo $index; ?>][type]" class="wpi-q-type-select" style="width:100%;">
+                                        <option value="email" <?php selected($q_type, 'email'); ?>>📧 电子邮箱录入 (强校验包含 @ 符号)</option>
+                                        <option value="choice" <?php selected($q_type, 'choice'); ?>>🔘 纯快捷选项卡片 (点击即自动下一步)</option>
+                                        <option value="choice_or_text" <?php selected($q_type, 'choice_or_text'); ?>>💬 快捷选项卡片 或 自由文本输入</option>
+                                        <option value="optional_text" <?php selected($q_type, 'optional_text'); ?>>📝 选填自由文本 (允许访客跳过)</option>
+                                        <option value="phone" <?php selected($q_type, 'phone'); ?>>📱 电话 / WhatsApp 录入</option>
+                                        <option value="text" <?php selected($q_type, 'text'); ?>>✏️ 普通必填文本</option>
+                                        <option value="name_email" <?php selected($q_type, 'name_email'); ?>>👤 姓名与邮箱组合录入</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom:12px;">
+                                <label style="font-weight:600;display:block;margin-bottom:4px;color:#334155;font-size:13px;">机器人在该步骤提出的问题 (Question Prompt)：</label>
+                                <textarea name="visual_questions[<?php echo $index; ?>][question]" rows="2" class="large-text wpi-q-text-input" style="width:100%;" placeholder="输入机器人问询客户的完整句子..."><?php echo esc_textarea($q['question'] ?? ''); ?></textarea>
+                                <span class="description" style="font-size:12px;">支持使用 <code>{product_name}</code> 变量动态插入访客当前正在浏览的产品名称。</span>
+                            </div>
+
+                            <div class="wpi-options-row" style="margin-bottom:12px;">
+                                <label style="font-weight:600;display:block;margin-bottom:4px;color:#334155;font-size:13px;">快捷选项卡片按钮 (Options Chips)：</label>
+                                <input type="text" name="visual_questions[<?php echo $index; ?>][options]" value="<?php echo esc_attr($q_options); ?>" class="large-text" style="width:100%;" placeholder="例如：Chat on WhatsApp, Prefer Email only">
+                                <span class="description" style="font-size:12px;">多个选项请用<strong>英文逗号</strong>隔开。前台将渲染为可点击的气泡选项卡片（如：<code>Chat on WhatsApp, Prefer Email only</code>）。</span>
+                            </div>
+
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px;">
+                                <div>
+                                    <label style="font-weight:600;display:block;margin-bottom:4px;color:#334155;font-size:13px;">输入框占位提示 (Placeholder)：</label>
+                                    <input type="text" name="visual_questions[<?php echo $index; ?>][placeholder]" value="<?php echo esc_attr($q['placeholder'] ?? ''); ?>" class="regular-text" style="width:100%;" placeholder="例如：Enter your business Email (name@company.com)...">
+                                </div>
+                                <div>
+                                    <label style="font-weight:600;display:block;margin-bottom:4px;color:#334155;font-size:13px;">校验失败引导提示 (Prompt Error)：</label>
+                                    <input type="text" name="visual_questions[<?php echo $index; ?>][prompt_error]" value="<?php echo esc_attr($q['prompt_error'] ?? ''); ?>" class="regular-text" style="width:100%;" placeholder="格式错误或缺失邮箱时机器人的报错引导语...">
+                                </div>
+                            </div>
+
+                            <div style="padding-top:10px;border-top:1px dashed #e2e8f0;display:flex;gap:24px;align-items:center;">
+                                <label style="font-weight:600;color:#991b1b;display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+                                    <input type="checkbox" name="visual_questions[<?php echo $index; ?>][require_at_email]" value="1" <?php checked($is_strict_email); ?>>
+                                    强制要求输入包含“@”的有效商业邮箱 (无 @ 自动拦截重输)
+                                </label>
+                                <label style="color:#475569;display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+                                    <input type="checkbox" name="visual_questions[<?php echo $index; ?>][required]" value="1" <?php checked(!empty($q['required']) || $is_strict_email); ?>>
+                                    必填项 (不允许留空或直接跳过)
+                                </label>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
 
-                <div style="background:#ffffff;border:1px solid #ccd0d4;padding:16px 20px;border-radius:8px;margin-bottom:20px;">
-                    <h2 style="margin-top:0;">语料库一键导入 (Import Corpus)</h2>
-                    <p class="description">粘贴外部导出的问答语料库 JSON（包含问卷流、FAQ、开场白），一键覆盖导入：</p>
-                    <textarea name="wpi_import_corpus_json" rows="5" class="large-text code" placeholder='{"form_questions": [...], "faq_list": [...]}'></textarea>
-                </div>
+                <!-- 添加新追问步骤按钮 -->
+                <button type="button" id="wpi-add-step-btn" class="button button-large button-secondary" style="width:100%;padding:10px 0;text-align:center;border-style:dashed;margin:12px 0 20px;font-weight:600;color:#0284c7;background:#f8fafc;">
+                    + 添加新追问步骤 (Add Question Step)
+                </button>
 
-                <p class="submit">
-                    <button type="submit" name="wpi_save_form_builder" class="button button-primary button-large">Save Questions & Corpus (保存表单语料)</button>
+                <p class="submit" style="margin-top:0;">
+                    <button type="submit" name="wpi_save_form_builder" class="button button-primary button-large" style="padding:4px 28px;font-size:14px;font-weight:600;">
+                        保存追问表单流程设置
+                    </button>
                 </p>
+
+                <!-- 高级开发者模式折叠抽屉 -->
+                <details style="margin-top:28px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 18px;">
+                    <summary style="cursor:pointer;font-weight:600;color:#0284c7;font-size:13px;">高级开发者模式：JSON 源码查看与备份导入 (点击展开)</summary>
+                    <div style="margin-top:12px;">
+                        <h4 style="margin:8px 0 4px;font-size:13px;color:#334155;">当前追问语料 JSON 源码 (导出/查看)：</h4>
+                        <textarea name="wpi_form_questions_json" rows="10" class="large-text code"><?php echo esc_textarea(wp_json_encode($form_questions, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)); ?></textarea>
+                    </div>
+                    <div style="margin-top:14px;padding-top:12px;border-top:1px dashed #cbd5e1;">
+                        <h4 style="margin:8px 0 4px;font-size:13px;color:#334155;">语料库一键导入 (Import Corpus JSON)：</h4>
+                        <p class="description" style="margin-bottom:6px;">粘贴外部导出的问答语料库 JSON（包含问卷流、FAQ、开场白），提交时将覆盖导入：</p>
+                        <textarea name="wpi_import_corpus_json" rows="4" class="large-text code" placeholder='{"form_questions": [...], "faq_list": [...]}'></textarea>
+                    </div>
+                </details>
             </form>
         </div>
+
+        <script>
+        (function() {
+            const list = document.getElementById('wpi-questions-list');
+            const addBtn = document.getElementById('wpi-add-step-btn');
+            const totalCountSpan = document.getElementById('wpi-steps-total-count');
+
+            function updateCardIndices() {
+                if (!list) return;
+                const cards = list.querySelectorAll('.wpi-question-card');
+                if (totalCountSpan) totalCountSpan.innerText = cards.length;
+                cards.forEach((card, idx) => {
+                    card.dataset.index = idx;
+                    const badgeNum = card.querySelector('.wpi-step-num');
+                    if (badgeNum) badgeNum.innerText = idx + 1;
+
+                    const upBtn = card.querySelector('.wpi-btn-up');
+                    const downBtn = card.querySelector('.wpi-btn-down');
+                    if (upBtn) upBtn.disabled = (idx === 0);
+                    if (downBtn) downBtn.disabled = (idx === cards.length - 1);
+
+                    // Re-index all name attributes inside card
+                    card.querySelectorAll('input, select, textarea').forEach(input => {
+                        if (input.name && input.name.startsWith('visual_questions[')) {
+                            input.name = input.name.replace(/^visual_questions\[\d+\]/, 'visual_questions[' + idx + ']');
+                        }
+                    });
+                });
+            }
+
+            if (list) {
+                // Live update summary header on question input
+                list.addEventListener('input', function(e) {
+                    if (e.target.classList.contains('wpi-q-text-input') || e.target.classList.contains('wpi-q-id-input')) {
+                        const card = e.target.closest('.wpi-question-card');
+                        if (card) {
+                            const textInput = card.querySelector('.wpi-q-text-input');
+                            const idInput = card.querySelector('.wpi-q-id-input');
+                            const summary = card.querySelector('.wpi-q-summary');
+                            if (summary) {
+                                const text = (textInput && textInput.value.trim()) || (idInput && idInput.value.trim()) || '未命名追问步骤';
+                                summary.innerText = text;
+                            }
+                        }
+                    }
+                });
+
+                // Move Up / Move Down / Delete Delegation
+                list.addEventListener('click', function(e) {
+                    const btn = e.target.closest('button');
+                    if (!btn) return;
+                    const card = btn.closest('.wpi-question-card');
+                    if (!card) return;
+
+                    if (btn.classList.contains('wpi-btn-up')) {
+                        const prev = card.previousElementSibling;
+                        if (prev && prev.classList.contains('wpi-question-card')) {
+                            list.insertBefore(card, prev);
+                            updateCardIndices();
+                        }
+                    } else if (btn.classList.contains('wpi-btn-down')) {
+                        const next = card.nextElementSibling;
+                        if (next && next.classList.contains('wpi-question-card')) {
+                            list.insertBefore(next, card);
+                            updateCardIndices();
+                        }
+                    } else if (btn.classList.contains('wpi-btn-del')) {
+                        if (list.querySelectorAll('.wpi-question-card').length <= 1) {
+                            alert('至少需要保留一个追问步骤。');
+                            return;
+                        }
+                        if (confirm('确定删除此追问步骤吗？')) {
+                            card.remove();
+                            updateCardIndices();
+                        }
+                    }
+                });
+            }
+
+            // Add new question step
+            if (addBtn && list) {
+                addBtn.addEventListener('click', function() {
+                    const cards = list.querySelectorAll('.wpi-question-card');
+                    const newIndex = cards.length;
+                    const newCard = document.createElement('div');
+                    newCard.className = 'wpi-question-card';
+                    newCard.dataset.index = newIndex;
+                    newCard.style.cssText = 'background:#ffffff;border:1px solid #cbd5e1;border-radius:8px;padding:16px 20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04);';
+                    newCard.innerHTML = `
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #f1f5f9;">
+                            <div style="display:flex;align-items:center;gap:10px;overflow:hidden;">
+                                <span class="wpi-step-badge" style="background:#0284c7;color:#ffffff;font-size:12px;font-weight:700;padding:2px 10px;border-radius:12px;white-space:nowrap;">
+                                    步骤 #<span class="wpi-step-num">${newIndex + 1}</span>
+                                </span>
+                                <strong class="wpi-q-summary" style="font-size:14px;color:#1e293b;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;">
+                                    新追问步骤
+                                </strong>
+                            </div>
+                            <div class="wpi-q-actions" style="display:flex;gap:6px;flex-shrink:0;">
+                                <button type="button" class="button button-small wpi-btn-up" title="上移此题">↑ 上移</button>
+                                <button type="button" class="button button-small wpi-btn-down" title="下移此题" disabled>↓ 下移</button>
+                                <button type="button" class="button button-small button-link-delete wpi-btn-del" title="删除此题">✕ 删除</button>
+                            </div>
+                        </div>
+
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px;">
+                            <div>
+                                <label style="font-weight:600;display:block;margin-bottom:4px;color:#334155;font-size:13px;">步骤字段标识 (ID)：</label>
+                                <input type="text" name="visual_questions[${newIndex}][id]" value="custom_step_${newIndex + 1}" class="regular-text wpi-q-id-input" style="width:100%;" required>
+                                <span class="description" style="font-size:12px;">唯一英文键名，如 <code>screen_size</code>、<code>quantity</code></span>
+                            </div>
+                            <div>
+                                <label style="font-weight:600;display:block;margin-bottom:4px;color:#334155;font-size:13px;">提问交互类型 (Type)：</label>
+                                <select name="visual_questions[${newIndex}][type]" class="wpi-q-type-select" style="width:100%;">
+                                    <option value="choice_or_text" selected>💬 快捷选项卡片 或 自由文本输入</option>
+                                    <option value="choice">🔘 纯快捷选项卡片 (点击即自动下一步)</option>
+                                    <option value="optional_text">📝 选填自由文本 (允许访客跳过)</option>
+                                    <option value="email">📧 电子邮箱录入 (强校验包含 @ 符号)</option>
+                                    <option value="phone">📱 电话 / WhatsApp 录入</option>
+                                    <option value="text">✏️ 普通必填文本</option>
+                                    <option value="name_email">👤 姓名与邮箱组合录入</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:12px;">
+                            <label style="font-weight:600;display:block;margin-bottom:4px;color:#334155;font-size:13px;">机器人在该步骤提出的问题 (Question Prompt)：</label>
+                            <textarea name="visual_questions[${newIndex}][question]" rows="2" class="large-text wpi-q-text-input" style="width:100%;" placeholder="输入机器人问询客户的完整句子..."></textarea>
+                            <span class="description" style="font-size:12px;">支持使用 <code>{product_name}</code> 变量动态插入访客当前正在浏览的产品名称。</span>
+                        </div>
+
+                        <div class="wpi-options-row" style="margin-bottom:12px;">
+                            <label style="font-weight:600;display:block;margin-bottom:4px;color:#334155;font-size:13px;">快捷选项卡片按钮 (Options Chips)：</label>
+                            <input type="text" name="visual_questions[${newIndex}][options]" value="" class="large-text" style="width:100%;" placeholder="例如：Option A, Option B, Option C (用英文逗号分隔)">
+                            <span class="description" style="font-size:12px;">多个选项请用<strong>英文逗号</strong>隔开。前台将渲染为可点击的气泡选项卡片。</span>
+                        </div>
+
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px;">
+                            <div>
+                                <label style="font-weight:600;display:block;margin-bottom:4px;color:#334155;font-size:13px;">输入框占位提示 (Placeholder)：</label>
+                                <input type="text" name="visual_questions[${newIndex}][placeholder]" value="Type your answer or select above..." class="regular-text" style="width:100%;">
+                            </div>
+                            <div>
+                                <label style="font-weight:600;display:block;margin-bottom:4px;color:#334155;font-size:13px;">校验失败引导提示 (Prompt Error)：</label>
+                                <input type="text" name="visual_questions[${newIndex}][prompt_error]" value="" class="regular-text" style="width:100%;">
+                            </div>
+                        </div>
+
+                        <div style="padding-top:10px;border-top:1px dashed #e2e8f0;display:flex;gap:24px;align-items:center;">
+                            <label style="font-weight:600;color:#991b1b;display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+                                <input type="checkbox" name="visual_questions[${newIndex}][require_at_email]" value="1">
+                                强制要求输入包含“@”的有效商业邮箱 (无 @ 自动拦截重输)
+                            </label>
+                            <label style="color:#475569;display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+                                <input type="checkbox" name="visual_questions[${newIndex}][required]" value="1">
+                                必填项 (不允许留空或直接跳过)
+                            </label>
+                        </div>
+                    `;
+                    list.appendChild(newCard);
+                    updateCardIndices();
+                    newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    const textInput = newCard.querySelector('.wpi-q-text-input');
+                    if (textInput) textInput.focus();
+                });
+            }
+
+            updateCardIndices();
+        })();
+        </script>
         <?php
     }
 
@@ -757,35 +1043,35 @@ class WPI_Admin {
         $export_json_url = wp_nonce_url(admin_url('admin.php?page=wpi-leads&action=export_json' . $current_status), 'wpi_export_json');
         ?>
         <div class="wrap">
-            <h1 class="wp-heading-inline">询盘线索与表单数据 (Inquiry Leads & Forms)</h1>
+            <h1 class="wp-heading-inline">询盘线索与工单列表</h1>
             <a href="<?php echo esc_url($export_csv_url); ?>" class="page-title-action" style="font-weight:600;color:#0369a1;background:#e0f2fe;border-color:#bae6fd;">导出 Excel / CSV 表单</a>
             <a href="<?php echo esc_url($export_json_url); ?>" class="page-title-action" style="font-weight:600;color:#334155;">导出 JSON 结构数据</a>
             <hr class="wp-header-end">
 
             <ul class="subsubsub">
-                <li><a href="<?php echo esc_url(admin_url('admin.php?page=wpi-leads')); ?>" class="<?php echo $status_filter === '' ? 'current' : ''; ?>">全部线索 (All) <span class="count">(<?php echo $total_count; ?>)</span></a> |</li>
-                <li><a href="<?php echo esc_url(admin_url('admin.php?page=wpi-leads&status=new')); ?>" class="<?php echo $status_filter === 'new' ? 'current' : ''; ?>">待跟进 (New) <span class="count">(<?php echo $new_count; ?>)</span></a> |</li>
-                <li><a href="<?php echo esc_url(admin_url('admin.php?page=wpi-leads&status=contacted')); ?>" class="<?php echo $status_filter === 'contacted' ? 'current' : ''; ?>">已联系 (Contacted) <span class="count">(<?php echo $total_count - $new_count; ?>)</span></a></li>
+                <li><a href="<?php echo esc_url(admin_url('admin.php?page=wpi-leads')); ?>" class="<?php echo $status_filter === '' ? 'current' : ''; ?>">全部线索 <span class="count">(<?php echo $total_count; ?>)</span></a> |</li>
+                <li><a href="<?php echo esc_url(admin_url('admin.php?page=wpi-leads&status=new')); ?>" class="<?php echo $status_filter === 'new' ? 'current' : ''; ?>">待跟进 <span class="count">(<?php echo $new_count; ?>)</span></a> |</li>
+                <li><a href="<?php echo esc_url(admin_url('admin.php?page=wpi-leads&status=contacted')); ?>" class="<?php echo $status_filter === 'contacted' ? 'current' : ''; ?>">已联系 <span class="count">(<?php echo $total_count - $new_count; ?>)</span></a></li>
             </ul>
 
             <table class="wp-list-table widefat fixed striped" style="margin-top:12px;">
                 <thead>
                     <tr>
-                        <th style="width:50px;">ID</th>
-                        <th style="width:85px;">Grade</th>
-                        <th style="width:200px;">Customer Contact</th>
-                        <th>Target Product</th>
-                        <th>Custom Form QA / Requirements</th>
-                        <th style="width:130px;">Visitor Info</th>
-                        <th style="width:80px;">Status</th>
-                        <th style="width:140px;">Created At</th>
-                        <th style="width:140px;">Actions</th>
+                        <th style="width:50px;">序号</th>
+                        <th style="width:85px;">意向评级</th>
+                        <th style="width:200px;">客户联系方式</th>
+                        <th>咨询产品</th>
+                        <th>追问回答与需求明细</th>
+                        <th style="width:130px;">访客地域与停留</th>
+                        <th style="width:80px;">跟进状态</th>
+                        <th style="width:140px;">提交时间</th>
+                        <th style="width:140px;">操作</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($leads)) : ?>
                         <tr>
-                            <td colspan="9" style="text-align:center;padding:24px;">No inquiries captured yet. Open the frontend site to test the chatbot!</td>
+                            <td colspan="9" style="text-align:center;padding:24px;color:#64748b;">暂无捕获到的询盘线索。可以在网站前台打开聊天窗口进行测试！</td>
                         </tr>
                     <?php else : ?>
                         <?php foreach ($leads as $lead) :
@@ -840,22 +1126,22 @@ class WPI_Admin {
                                 <td>
                                     <?php echo esc_html($country); ?><br>
                                     <?php if ($dwell > 0) : ?>
-                                        <span style="font-size:11px;color:#16a34a;">⏱️ <?php echo $dwell; ?>s dwell</span>
+                                        <span style="font-size:11px;color:#16a34a;">⏱️ <?php echo $dwell; ?> 秒停留</span>
                                     <?php endif; ?>
                                 </td>
                                 <td>
                                     <?php if ($lead->status === 'new') : ?>
-                                        <span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;">NEW</span>
+                                        <span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;">待跟进</span>
                                     <?php else : ?>
-                                        <span style="background:#f3f4f6;color:#4b5563;padding:2px 8px;border-radius:10px;font-size:11px;">Contacted</span>
+                                        <span style="background:#f3f4f6;color:#4b5563;padding:2px 8px;border-radius:10px;font-size:11px;">已联系</span>
                                     <?php endif; ?>
                                 </td>
                                 <td><?php echo esc_html($lead->created_at); ?></td>
                                 <td>
                                     <?php if ($lead->status === 'new') : ?>
-                                        <a href="<?php echo esc_url($mark_url); ?>" class="button button-small">Mark Contacted</a>
+                                        <a href="<?php echo esc_url($mark_url); ?>" class="button button-small">标记已联系</a>
                                     <?php endif; ?>
-                                    <a href="<?php echo esc_url($del_url); ?>" class="button button-small button-link-delete" onclick="return confirm('Delete this inquiry?');">Delete</a>
+                                    <a href="<?php echo esc_url($del_url); ?>" class="button button-small button-link-delete" onclick="return confirm('确定要删除此条询盘记录吗？');">删除</a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -882,22 +1168,22 @@ class WPI_Admin {
         $webhook_secret = get_option('wpi_webhook_secret', '');
         $faq_list       = get_option('wpi_faq_list', self::get_default_faqs());
         ?>
-        <div class="wrap">
-            <h1>Chatbot Settings (ECV Conversion Mode)</h1>
+        <div class="wrap wpi-admin-wrap">
+            <h1>询盘机器人核心设置</h1>
             <form method="post" action="">
                 <?php wp_nonce_field('wpi_save_settings_nonce'); ?>
                 <table class="form-table">
                     <tr>
-                        <th scope="row">Enable Chatbot</th>
+                        <th scope="row">启用询盘机器人</th>
                         <td>
-                            <label>
+                            <label style="font-weight:600;">
                                 <input type="checkbox" name="wpi_enabled" value="1" <?php checked($enabled, '1'); ?>>
-                                Display floating inquiry chatbot on frontend
+                                在网站前台右下角显示浮动询盘聊天窗口
                             </label>
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row">Language Configuration (语言配置)</th>
+                        <th scope="row">前台机器人语言模式</th>
                         <td>
                             <fieldset>
                                 <label style="margin-right:25px;display:inline-block;margin-bottom:6px;">
@@ -919,102 +1205,135 @@ class WPI_Admin {
                                 控制前台浮窗状态、输入框占位符、错误校验提示的语言。
                             </p>
                             <div style="margin-top:10px;padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;display:inline-block;">
-                                <strong style="font-size:12px;color:#334155;margin-right:8px;">快捷重置基本话术：</strong>
+                                <strong style="font-size:12px;color:#334155;margin-right:8px;">快捷重置基础话术：</strong>
                                 <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=wpi-settings&action=load_i18n_defaults&lang=zh_CN'), 'wpi_load_i18n')); ?>" class="button button-secondary" onclick="return confirm('确定重置欢迎语、客服名称、成功提示为简体中文吗？');">
                                     一键填充中文预设话术
                                 </a>
-                                <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=wpi-settings&action=load_i18n_defaults&lang=en'), 'wpi_load_i18n')); ?>" class="button button-secondary" onclick="return confirm('Reset basic greeting, bot name, and success message to English?');" style="margin-left:6px;">
+                                <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=wpi-settings&action=load_i18n_defaults&lang=en'), 'wpi_load_i18n')); ?>" class="button button-secondary" onclick="return confirm('确定重置欢迎语、客服名称、成功提示为英文吗？');" style="margin-left:6px;">
                                     一键填充英文预设话术
                                 </a>
                             </div>
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row">Specialist / Bot Name</th>
+                        <th scope="row">在线客服 / 顾问名称</th>
                         <td>
-                            <input type="text" name="wpi_bot_name" value="<?php echo esc_attr($bot_name); ?>" class="regular-text">
+                            <input type="text" name="wpi_bot_name" value="<?php echo esc_attr($bot_name); ?>" class="regular-text" placeholder="例如：Sales Specialist, 业务顾问">
+                            <p class="description">前台聊天窗口顶部显示的客服人员或专家称呼。</p>
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row">Context-Aware Greeting</th>
+                        <th scope="row">产品页针对性开场白</th>
                         <td>
                             <textarea name="wpi_welcome_msg" rows="2" class="large-text"><?php echo esc_textarea($welcome_msg); ?></textarea>
-                            <p class="description">Used on product/article pages. Use <code>{product_name}</code> to dynamically insert the page/product title.</p>
+                            <p class="description">在产品或文章详情页生效。支持使用 <code>{product_name}</code> 动态插入当前产品或页面标题。</p>
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row">Home / General Greeting</th>
+                        <th scope="row">首页 / 通用页面欢迎语</th>
                         <td>
                             <textarea name="wpi_default_welcome_msg" rows="2" class="large-text"><?php echo esc_textarea($default_msg); ?></textarea>
-                            <p class="description">Fallback greeting on home page or generic archive pages.</p>
+                            <p class="description">在首页、分类归档页等无具体产品上下文时的兜底问候语。</p>
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row">Proactive Auto-Popup (Seconds)</th>
+                        <th scope="row">主动弹出延时 (秒)</th>
                         <td>
-                            <input type="number" name="wpi_auto_popup_seconds" value="<?php echo esc_attr($auto_popup); ?>" min="0" max="300" class="small-text"> seconds
-                            <p class="description">Set to <code>15</code> to automatically open the inquiry invitation after 15 seconds on page (0 = disable).</p>
+                            <input type="number" name="wpi_auto_popup_seconds" value="<?php echo esc_attr($auto_popup); ?>" min="0" max="300" class="small-text"> 秒
+                            <p class="description">访客停留超过指定秒数后自动展开对话框（如设为 <code>15</code>；设为 0 为禁用）。</p>
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row">Exit-Intent Interception</th>
+                        <th scope="row">离开意图挽留弹窗 (Exit Intent)</th>
                         <td>
-                            <label>
+                            <label style="font-weight:600;">
                                 <input type="checkbox" name="wpi_exit_intent" value="1" <?php checked($exit_intent, 1); ?>>
-                                Pop open when visitor moves mouse towards closing the browser tab
+                                当检测到访客鼠标向浏览器顶部关闭按钮移动时，自动弹出挽留对话框
                             </label>
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row">Scroll Depth Trigger (%)</th>
+                        <th scope="row">页面滚动深度触发 (%)</th>
                         <td>
                             <input type="number" name="wpi_scroll_trigger" value="<?php echo esc_attr($scroll_trigger); ?>" min="0" max="100" class="small-text"> %
-                            <p class="description">Open widget when user scrolls past this percentage of the page (0 = disable).</p>
+                            <p class="description">访客向下浏览滚动超过页面指定百分比时自动弹出（如设为 <code>50</code>；设为 0 为禁用）。</p>
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row">Lead Captured Message</th>
+                        <th scope="row">询盘提交成功感谢语</th>
                         <td>
                             <textarea name="wpi_lead_success_msg" rows="2" class="large-text"><?php echo esc_textarea($success_msg); ?></textarea>
+                            <p class="description">客户完成留资提交后机器人回复的确认信息与回复承诺。</p>
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row">Notification Email</th>
+                        <th scope="row">通知接收邮箱</th>
                         <td>
-                            <input type="email" name="wpi_notify_email" value="<?php echo esc_attr($notify_email); ?>" class="regular-text">
-                            <p class="description">Instant email alert recipient when a new lead is submitted.</p>
+                            <input type="email" name="wpi_notify_email" value="<?php echo esc_attr($notify_email); ?>" class="regular-text" placeholder="sales@yourcompany.com">
+                            <p class="description">当有新客户提交询盘时，立即接收即时邮件提醒的管理员/销售邮箱。</p>
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row">WhatsApp / Phone Number</th>
+                        <th scope="row">官方 WhatsApp / 客服电话</th>
                         <td>
-                            <input type="text" name="wpi_whatsapp_number" value="<?php echo esc_attr(get_option('wpi_whatsapp_number', '')); ?>" class="regular-text" placeholder="+1 555 123 4567">
-                            <p class="description">Official sales WhatsApp/Phone number (with country code). Triggered when visitor clicks "Chat on WhatsApp".</p>
+                            <input type="text" name="wpi_whatsapp_number" value="<?php echo esc_attr(get_option('wpi_whatsapp_number', '')); ?>" class="regular-text" placeholder="+86 186 1234 5678">
+                            <p class="description">官方销售 WhatsApp 或手机号（需包含国际区号，如 <code>+86 186...</code> 或海外号码）。当访客点击“Chat on WhatsApp”选项时自动唤起 WhatsApp 并预填当前产品名与链接。</p>
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row">Feishu Webhook URL</th>
+                        <th scope="row">飞书机器人 Webhook 地址</th>
                         <td>
                             <input type="url" id="wpi_webhook_url" name="wpi_webhook_url" value="<?php echo esc_attr($webhook_url); ?>" class="large-text" placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
-                            <p class="description">Feishu custom robot webhook URL. Sends formatted rich interactive cards with WhatsApp & Mailto shortcuts.</p>
+                            <p class="description">飞书自定义机器人 Webhook 地址。新询盘秒级推送单屏高转化交互卡片。</p>
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row">Feishu Secret (签名密钥)</th>
+                        <th scope="row">飞书签名校验密钥 (Secret)</th>
                         <td>
-                            <input type="text" id="wpi_webhook_secret" name="wpi_webhook_secret" value="<?php echo esc_attr($webhook_secret); ?>" class="regular-text" placeholder="Optional HMAC SHA256 secret">
-                            <p class="description">Optional: If signature verification (签名校验) is turned on in your Feishu robot security settings.</p>
+                            <input type="text" id="wpi_webhook_secret" name="wpi_webhook_secret" value="<?php echo esc_attr($webhook_secret); ?>" class="regular-text" placeholder="选填：HMAC SHA256 签名密钥">
+                            <p class="description">选填：若飞书机器人开启了安全设置中的“签名校验”，请在此输入密钥。</p>
                             <div style="margin-top:10px;">
-                                <button type="button" id="wpi-test-webhook-btn" class="button button-secondary">Send Test Feishu Inquiry Ticket (发送测试工单卡片)</button>
+                                <button type="button" id="wpi-test-webhook-btn" class="button button-secondary">发送测试工单卡片至飞书群</button>
                                 <span id="wpi-test-webhook-result" style="margin-left:10px;font-weight:600;"></span>
                             </div>
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row">FAQ Keyword Corpus (JSON)</th>
+                        <th scope="row">FAQ 常见问答语料库 (零延迟本地匹配)</th>
                         <td>
-                            <textarea name="wpi_faq_json" rows="8" class="large-text code"><?php echo esc_textarea(wp_json_encode($faq_list, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)); ?></textarea>
-                            <p class="description">Deterministic keyword matching rules. Zero LLM latency.</p>
+                            <p class="description" style="margin-bottom:10px;">无需调用大模型 API，毫秒级本地关键词命中与即时回复。回复后自动引导客户继续询盘流程。</p>
+
+                            <!-- 可视化 FAQ 列表 -->
+                            <div id="wpi-faq-builder" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:8px;padding:16px 18px;max-width:880px;">
+                                <div id="wpi-faq-items">
+                                    <?php foreach ($faq_list as $f_idx => $faq) :
+                                        $kw_str = is_array($faq['keywords'] ?? null) ? implode(', ', $faq['keywords']) : ($faq['keywords'] ?? '');
+                                    ?>
+                                        <div class="wpi-faq-card" data-faq-index="<?php echo $f_idx; ?>" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:12px 16px;margin-bottom:12px;">
+                                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                                                <strong style="color:#0369a1;font-size:13px;">问答规则 #<span class="wpi-faq-num"><?php echo $f_idx + 1; ?></span></strong>
+                                                <button type="button" class="button button-small button-link-delete wpi-btn-del-faq">✕ 删除此规则</button>
+                                            </div>
+                                            <div style="margin-bottom:8px;">
+                                                <label style="font-weight:600;font-size:12px;color:#334155;display:block;margin-bottom:3px;">匹配关键词 (Keywords)：</label>
+                                                <input type="text" name="visual_faqs[<?php echo $f_idx; ?>][keywords]" value="<?php echo esc_attr($kw_str); ?>" class="large-text" style="width:100%;" placeholder="例如：moq, minimum, 起订量 (多个词用逗号分隔)">
+                                            </div>
+                                            <div>
+                                                <label style="font-weight:600;font-size:12px;color:#334155;display:block;margin-bottom:3px;">机器人自动标准回复 (Answer)：</label>
+                                                <textarea name="visual_faqs[<?php echo $f_idx; ?>][answer]" rows="2" class="large-text" style="width:100%;" placeholder="输入匹配到关键词后的自动回复话术..."><?php echo esc_textarea($faq['answer'] ?? ''); ?></textarea>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                                <button type="button" id="wpi-add-faq-btn" class="button button-secondary" style="margin-top:4px;font-weight:600;color:#0284c7;">+ 添加一条 FAQ 规则</button>
+                            </div>
+
+                            <details style="margin-top:10px;font-size:12px;color:#64748b;max-width:880px;">
+                                <summary style="cursor:pointer;color:#0284c7;">高级模式：查看/编辑原始 FAQ JSON 源码</summary>
+                                <div style="margin-top:8px;">
+                                    <textarea name="wpi_faq_json" rows="6" class="large-text code"><?php echo esc_textarea(wp_json_encode($faq_list, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)); ?></textarea>
+                                </div>
+                            </details>
                         </td>
                     </tr>
                     <tr>
@@ -1023,16 +1342,16 @@ class WPI_Admin {
                             <p><strong>当前运行版本：</strong> <code>v<?php echo esc_html(WPI_VERSION); ?></code></p>
                             <p style="margin-top:6px;">
                                 <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=wpi-settings&wpi_check_update=1'), 'wpi_check_update_action')); ?>" class="button button-secondary">
-                                    立即检查新版本 (Check for Updates)
+                                    立即检查新版本
                                 </a>
-                                <span class="description" style="margin-left:8px;">点击将强制连接 Gitea 检查是否有新版本，并跳转至 WordPress 更新中心。</span>
+                                <span class="description" style="margin-left:8px;">点击将强制连接更新仓库检查是否有新版本，并跳转至 WordPress 更新中心。</span>
                             </p>
                             <details style="margin-top:10px;font-size:12px;color:#475569;">
                                 <summary style="cursor:pointer;color:#0284c7;">高级更新源设置 (Advanced Update Settings)</summary>
                                 <div style="margin-top:8px;padding:12px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;max-width:680px;">
                                     <label><strong>更新元数据地址 (Update JSON URL):</strong></label><br>
                                     <input type="url" name="wpi_update_url" value="<?php echo esc_attr(WPI_Updater::get_update_url()); ?>" class="large-text" style="margin:4px 0 8px;"><br>
-                                    <label><strong>Gitea 只读访问凭证 (Access Token):</strong></label><br>
+                                    <label><strong>只读访问凭证 (Access Token):</strong></label><br>
                                     <input type="text" name="wpi_update_token" value="<?php echo esc_attr(WPI_Updater::get_token()); ?>" class="regular-text" style="margin-top:4px;">
                                     <p class="description">默认已预设只读更新密钥，通常无需修改。</p>
                                 </div>
@@ -1041,52 +1360,121 @@ class WPI_Admin {
                     </tr>
                 </table>
                 <p class="submit">
-                    <button type="submit" name="wpi_save_settings" class="button button-primary">Save Settings</button>
+                    <button type="submit" name="wpi_save_settings" class="button button-primary button-large" style="padding:4px 28px;font-size:14px;font-weight:600;">保存机器人设置</button>
                 </p>
             </form>
         </div>
 
         <script>
-        document.getElementById('wpi-test-webhook-btn')?.addEventListener('click', function () {
-            const btn = this;
-            const resSpan = document.getElementById('wpi-test-webhook-result');
-            const webhookUrl = document.getElementById('wpi_webhook_url').value.trim();
-            const secret = document.getElementById('wpi_webhook_secret').value.trim();
+        (function() {
+            // FAQ Builder Management
+            const faqContainer = document.getElementById('wpi-faq-items');
+            const addFaqBtn = document.getElementById('wpi-add-faq-btn');
 
-            if (!webhookUrl) {
-                alert('Please enter a Feishu Webhook URL first.');
-                return;
+            function updateFaqIndices() {
+                if (!faqContainer) return;
+                const rows = faqContainer.querySelectorAll('.wpi-faq-card');
+                rows.forEach((row, idx) => {
+                    row.dataset.faqIndex = idx;
+                    const numSpan = row.querySelector('.wpi-faq-num');
+                    if (numSpan) numSpan.innerText = idx + 1;
+
+                    row.querySelectorAll('input, textarea').forEach(input => {
+                        if (input.name && input.name.startsWith('visual_faqs[')) {
+                            input.name = input.name.replace(/^visual_faqs\[\d+\]/, 'visual_faqs[' + idx + ']');
+                        }
+                    });
+                });
             }
 
-            btn.disabled = true;
-            resSpan.style.color = '#4b5563';
-            resSpan.innerText = 'Sending test card to Feishu...';
+            if (faqContainer) {
+                faqContainer.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('wpi-btn-del-faq')) {
+                        if (faqContainer.querySelectorAll('.wpi-faq-card').length <= 1) {
+                            alert('至少需要保留一条 FAQ 规则。');
+                            return;
+                        }
+                        if (confirm('确定删除此条 FAQ 规则吗？')) {
+                            e.target.closest('.wpi-faq-card').remove();
+                            updateFaqIndices();
+                        }
+                    }
+                });
+            }
 
-            fetch('<?php echo esc_url_raw(rest_url('wpi/v1/test-webhook')); ?>', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-WP-Nonce': '<?php echo wp_create_nonce('wp_rest'); ?>'
-                },
-                body: JSON.stringify({ webhook_url: webhookUrl, secret: secret })
-            })
-            .then(res => res.json())
-            .then(data => {
-                btn.disabled = false;
-                if (data.success) {
-                    resSpan.style.color = '#16a34a';
-                    resSpan.innerText = 'Test Feishu Card sent successfully! Check your Feishu group.';
-                } else {
-                    resSpan.style.color = '#dc2626';
-                    resSpan.innerText = 'Error: ' + (data.message || 'Failed to dispatch to Feishu');
-                }
-            })
-            .catch(err => {
-                btn.disabled = false;
-                resSpan.style.color = '#dc2626';
-                resSpan.innerText = 'Request failed: ' + err.message;
-            });
-        });
+            if (addFaqBtn && faqContainer) {
+                addFaqBtn.addEventListener('click', function() {
+                    const rows = faqContainer.querySelectorAll('.wpi-faq-card');
+                    const newIdx = rows.length;
+                    const newCard = document.createElement('div');
+                    newCard.className = 'wpi-faq-card';
+                    newCard.dataset.faqIndex = newIdx;
+                    newCard.style.cssText = 'background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:12px 16px;margin-bottom:12px;';
+                    newCard.innerHTML = `
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                            <strong style="color:#0369a1;font-size:13px;">问答规则 #<span class="wpi-faq-num">${newIdx + 1}</span></strong>
+                            <button type="button" class="button button-small button-link-delete wpi-btn-del-faq">✕ 删除此规则</button>
+                        </div>
+                        <div style="margin-bottom:8px;">
+                            <label style="font-weight:600;font-size:12px;color:#334155;display:block;margin-bottom:3px;">匹配关键词 (Keywords)：</label>
+                            <input type="text" name="visual_faqs[${newIdx}][keywords]" value="" class="large-text" style="width:100%;" placeholder="例如：custom, oem, 定制 (多个词用逗号分隔)">
+                        </div>
+                        <div>
+                            <label style="font-weight:600;font-size:12px;color:#334155;display:block;margin-bottom:3px;">机器人自动标准回复 (Answer)：</label>
+                            <textarea name="visual_faqs[${newIdx}][answer]" rows="2" class="large-text" style="width:100%;" placeholder="输入匹配到关键词后的自动回复话术..."></textarea>
+                        </div>
+                    `;
+                    faqContainer.appendChild(newCard);
+                    updateFaqIndices();
+                    newCard.querySelector('input').focus();
+                });
+            }
+
+            // Feishu Test Webhook
+            const testBtn = document.getElementById('wpi-test-webhook-btn');
+            if (testBtn) {
+                testBtn.addEventListener('click', function () {
+                    const btn = this;
+                    const resSpan = document.getElementById('wpi-test-webhook-result');
+                    const webhookUrl = document.getElementById('wpi_webhook_url').value.trim();
+                    const secret = document.getElementById('wpi_webhook_secret').value.trim();
+
+                    if (!webhookUrl) {
+                        alert('请先输入飞书 Webhook 地址。');
+                        return;
+                    }
+
+                    btn.disabled = true;
+                    resSpan.style.color = '#4b5563';
+                    resSpan.innerText = '正在向飞书群发送测试卡片...';
+
+                    fetch('<?php echo esc_url_raw(rest_url('wpi/v1/test-webhook')); ?>', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-WP-Nonce': '<?php echo wp_create_nonce('wp_rest'); ?>'
+                        },
+                        body: JSON.stringify({ webhook_url: webhookUrl, secret: secret })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        btn.disabled = false;
+                        if (data.success) {
+                            resSpan.style.color = '#16a34a';
+                            resSpan.innerText = '测试卡片发送成功！请检查飞书群消息。';
+                        } else {
+                            resSpan.style.color = '#dc2626';
+                            resSpan.innerText = '推送失败：' + (data.message || '无法分发到飞书');
+                        }
+                    })
+                    .catch(err => {
+                        btn.disabled = false;
+                        resSpan.style.color = '#dc2626';
+                        resSpan.innerText = '请求异常：' + err.message;
+                    });
+                });
+            }
+        })();
         </script>
         <?php
     }
