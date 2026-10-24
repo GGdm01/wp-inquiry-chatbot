@@ -120,15 +120,15 @@ class WPI_Rest_API {
         $session_id   = sanitize_key($params['session_id'] ?? '');
         $product_name = sanitize_text_field($params['product_name'] ?? '');
         $source_url   = esc_url_raw($params['source_url'] ?? ($params['product_url'] ?? ''));
-        $dwell_time   = (int) ($params['dwell_time'] ?? 0);
-        $referrer     = esc_url_raw($params['referrer'] ?? '');
+        $dwell_time   = (int) ($params['dwell_time'] ?? ($params['visit']['dwell_sec'] ?? 0));
+        $referrer     = esc_url_raw($params['referrer'] ?? ($params['visit']['referrer'] ?? ''));
         $silent       = !empty($params['silent']);
         $is_final     = !empty($params['is_final']);
-        $ip_address   = self::get_client_ip();
-        $country      = self::get_client_country();
+        $ip_address   = !empty($params['visit']['ip']) ? sanitize_text_field($params['visit']['ip']) : self::get_client_ip();
+        $country      = !empty($params['visit']['country']) ? sanitize_text_field($params['visit']['country']) : self::get_client_country();
 
         // Extract answers array from form_data
-        $raw_answers = $params['form_data'] ?? [];
+        $raw_answers = $params['form_data'] ?? ($params['answers'] ?? []);
         if (is_string($raw_answers)) {
             $raw_answers = json_decode($raw_answers, true) ?: [];
         }
