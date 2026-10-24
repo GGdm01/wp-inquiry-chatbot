@@ -7,7 +7,7 @@
  *
  * Options:
  *   --wp-path=<path>       WordPress 根目录路径 (默认自动从当前目录或父级向上探测)
- *   --industry=<archetype> 工业原型预设: outdoor_lcd | video_wall | interactive_table | kiosk | touch_screen | stretched_bar | lighting | wear_parts | battery | generic
+ *   --industry=<archetype> 工业原型预设: smart_board | outdoor_lcd | video_wall | interactive_table | kiosk | touch_screen | stretched_bar | lighting | wear_parts | battery | generic
  *   --corpus=<file.json>   自定义追问表单 JSON 文件 (覆盖 industry 预设)
  *   --feishu=<url>         飞书机器人 Webhook 地址
  *   --secret=<secret>      飞书机器人签名密钥 (选填)
@@ -56,6 +56,7 @@ if (isset($options['help'])) {
   --plugin-src=<目录>    指定本地插件代码源目录 (若指定则直接从该目录同步覆盖，秒级就位)
   --update               强制重新拉取最新版本覆盖现有插件
   --industry=<行业>      注入行业专属 7 步提问预设 (严格包含首步 @ 邮箱门禁):
+                         • smart_board   : 教学与会议智能平板一体机 / 交互白板 / IFPD (65"~98" 4K)
                          • outdoor_lcd   : 户外高亮防水液晶屏 / 智慧公交站牌 / 户外广告机
                          • video_wall    : 液晶拼接屏电视墙 / 超窄边监控指挥大屏 / 拼接单元
                          • interactive_table: 智能触控茶几 / 会议触控桌 / 物体识别互动台
@@ -963,6 +964,76 @@ function get_archetype_questions($industry) {
                     ],
                     'required'    => false,
                     'placeholder' => 'Specify OS, GPU/CPU, CMS, or 3D content creation needs...',
+                ],
+                $base_volume
+            ];
+        case 'smart_board':
+        case 'smartboard':
+        case 'ifpd':
+        case 'interactive_flat_panel':
+        case 'whiteboard':
+            return [
+                [
+                    'id'               => 'name_email',
+                    'question'         => 'Hello, may I have your Name and Business Email to send the complete LCD Smart Board spec sheet, CAD drawing and wholesale quotation?',
+                    'type'             => 'name_email',
+                    'required'         => true,
+                    'require_at_email' => true,
+                    'prompt_error'     => 'Please provide a valid business email containing "@" (e.g. name@company.com) so we can send the quotation.',
+                    'placeholder'      => 'Your Name & Business Email with @...',
+                ],
+                $base_whatsapp,
+                [
+                    'id'          => 'application_scenario',
+                    'question'    => 'What is your primary application scenario and room environment?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'Smart Classroom / K-12 & Higher Education (教学交互)',
+                        'Corporate Meeting Room / Hybrid Video Conference (企业会议)',
+                        'Training Center & Presentation Auditorium (多功能培训厅)',
+                        'Government & Exhibition Hall / Command Center (政企展厅)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Select scenario or describe your venue dimensions...',
+                ],
+                [
+                    'id'          => 'touch_technology',
+                    'question'    => 'Which touch technology and screen bonding process do you require?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'High-precision IR 20/40-Point Touch (Cost-Effective & Durable)',
+                        'PCAP Capacitive Multi-touch (Ultra-smooth Flush Glass)',
+                        'Zero-gap / Optical Bonding + Anti-Glare (AG) 4mm Tempered Glass',
+                        'Standard Infrared Touch with Anti-Glare Treatment'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Select touch technology or specify glass requirements...',
+                ],
+                [
+                    'id'          => 'screen_size',
+                    'question'    => 'What screen size fits your classroom or conference space?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        '65" 4K UHD (Most popular for 10-20 people / standard classroom)',
+                        '75" 4K UHD (Best for 20-30 people conference room)',
+                        '86" 4K UHD (Recommended for 30-50 people large boardroom)',
+                        '55" (Small Huddle Room) / 98"-110" (Grand Auditorium)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Preferred size (55", 65", 75", 85", 86", 98", 100", 110")...',
+                ],
+                [
+                    'id'          => 'system_accessories',
+                    'question'    => 'Which operating system (OS) and collaboration accessories are needed?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'Dual OS: Android 13/14 + Windows OPS i5/i7 (One-click switch)',
+                        'Android OS Only (4G+32G / 8G+128G with Whiteboard software)',
+                        'With 4K Auto-Tracking Camera + 8-Array Mic + Rolling Stand Cart',
+                        'Monitor Mode (HDMI In + Touch USB) + Heavy-Duty Wall Mount'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Specify OS, OPS PC specs (i5/i7/RAM/SSD) or accessories...',
                 ],
                 $base_volume
             ];
