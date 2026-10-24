@@ -7,7 +7,7 @@
  *
  * Options:
  *   --wp-path=<path>       WordPress 根目录路径 (默认自动从当前目录或父级向上探测)
- *   --industry=<archetype> 工业原型预设: kiosk | touch_screen | stretched_bar | lighting | wear_parts | battery | generic
+ *   --industry=<archetype> 工业原型预设: outdoor_lcd | video_wall | interactive_table | kiosk | touch_screen | stretched_bar | lighting | wear_parts | battery | generic
  *   --corpus=<file.json>   自定义追问表单 JSON 文件 (覆盖 industry 预设)
  *   --feishu=<url>         飞书机器人 Webhook 地址
  *   --secret=<secret>      飞书机器人签名密钥 (选填)
@@ -56,6 +56,8 @@ if (isset($options['help'])) {
   --plugin-src=<目录>    指定本地插件代码源目录 (若指定则直接从该目录同步覆盖，秒级就位)
   --update               强制重新拉取最新版本覆盖现有插件
   --industry=<行业>      注入行业专属 7 步提问预设 (严格包含首步 @ 邮箱门禁):
+                         • outdoor_lcd   : 户外高亮防水液晶屏 / 智慧公交站牌 / 户外广告机
+                         • video_wall    : 液晶拼接屏电视墙 / 超窄边监控指挥大屏 / 拼接单元
                          • interactive_table: 智能触控茶几 / 会议触控桌 / 物体识别互动台
                          • kiosk         : 自助终端机 / 钣金工控柜 / 商用整机
                          • touch_screen  : 工业触控屏 / 工控一体机 / 嵌入式显示器
@@ -755,6 +757,141 @@ function get_archetype_questions($industry) {
                     ],
                     'required'    => false,
                     'placeholder' => 'Specify OS, CPU/RAM, or external PC connection...',
+                ],
+                $base_volume
+            ];
+        case 'video_wall':
+        case 'lcd_video_wall':
+            return [
+                [
+                    'id'               => 'name_email',
+                    'question'         => 'Hello, may I have your Name and Business Email?',
+                    'type'             => 'name_email',
+                    'required'         => true,
+                    'require_at_email' => true,
+                    'prompt_error'     => 'Please provide a valid business email containing "@" (e.g. name@company.com) so we can send the video wall proposal & quotation.',
+                    'placeholder'      => 'Your Name & Business Email with @...',
+                ],
+                $base_whatsapp,
+                [
+                    'id'          => 'bezel_size',
+                    'question'    => 'What screen unit size and physical bezel seam width do you prefer?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        '55" 0.88mm Ultra-Narrow Bezel (Seamless Command Center)',
+                        '55" 1.74mm / 1.8mm Razor Narrow Bezel (Popular for Control Rooms)',
+                        '55" / 49" / 46" 3.5mm Commercial Bezel (Cost-effective CCTV)',
+                        '65" Large Format Splicing Unit (0.88mm / 3.5mm)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Select unit size & bezel or specify required dimensions...',
+                ],
+                [
+                    'id'          => 'matrix_layout',
+                    'question'    => 'What matrix layout or video wall array do you plan to deploy?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        '2x2 (4 screens) / 3x2 (6 screens) Compact Wall',
+                        '3x3 (9 screens) Standard Command Center',
+                        '4x4 (16 screens) / 4x6 / 5x5 Large Scale Wall',
+                        'Custom Rows × Columns (Paste wall dimensions W×H)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Select matrix layout or enter your room width & height...',
+                ],
+                [
+                    'id'          => 'bracket_structure',
+                    'question'    => 'Which mounting bracket and maintenance structure fits your site installation?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'Front Hydraulic Push-out Rack (Easy pop-out maintenance)',
+                        'Floor-standing Aluminum Profile Bracket (Heavy-duty)',
+                        'Wall-mounted Fixed Bracket (Slim flat mount)',
+                        'Floor Cabinet Base (Integrated equipment enclosure)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Select mounting solution or describe installation wall/space...',
+                ],
+                [
+                    'id'          => 'splicing_processor',
+                    'question'    => 'What video wall controller or signal processing solution do you require?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'Standard Multi-Screen Loop-through (HDMI/DP Daisy Chain)',
+                        '4K Video Wall Matrix Processor (Multi-window Roaming/PIP)',
+                        'IP Network Distributed Matrix (AV over IP for CCTV / NOC)',
+                        'Display Panels & Brackets Only (We have our own controller)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Specify signal inputs (HDMI/DVI/SDI), windows, or controller...',
+                ],
+                $base_volume
+            ];
+        case 'outdoor_lcd':
+        case 'outdoor_display':
+        case 'outdoor_signage':
+            return [
+                [
+                    'id'               => 'name_email',
+                    'question'         => 'Hello, may I have your Name and Business Email?',
+                    'type'             => 'name_email',
+                    'required'         => true,
+                    'require_at_email' => true,
+                    'prompt_error'     => 'Please provide a valid business email containing "@" (e.g. name@company.com).',
+                    'placeholder'      => 'Your Name & Business Email with @...',
+                ],
+                $base_whatsapp,
+                [
+                    'id'          => 'installation_form',
+                    'question'    => 'What is your project application and enclosure installation style?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'Smart Bus Shelter / Transit Info Totem',
+                        'Floor-Standing Totem (Single-Sided)',
+                        'Dual-Sided Outdoor Totem (Double-Screen)',
+                        'Wall-Mounted IP65 Outdoor Display'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Select form factor or describe your installation environment...',
+                ],
+                [
+                    'id'          => 'screen_size',
+                    'question'    => 'What screen size do you prefer for this outdoor display?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        '55 Inch (Most Popular Standard)',
+                        '65 Inch (High-Traffic Transit)',
+                        '75 / 86 Inch (Large-Format Totem)',
+                        '32 / 43 Inch (Compact Wall-Mount)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Select size or specify custom dimensions...',
+                ],
+                [
+                    'id'          => 'brightness_cooling',
+                    'question'    => 'What are your requirements for brightness and thermal cooling?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        '2500 nits + Smart Fan Cooling (-20°C ~ +50°C)',
+                        '3000~4000 nits + Industrial Air Conditioner (Extreme Heat)',
+                        '2000 nits Semi-Outdoor / Covered Shelter',
+                        'Include Ambient Light Sensor (Auto Dimming)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Specify brightness or target ambient temperature range...',
+                ],
+                [
+                    'id'          => 'system_player',
+                    'question'    => 'Which operating system and media playback solution is required?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'Android CMS Cloud Player (WiFi / 4G Remote Scheduling)',
+                        'Windows Industrial PC (Intel Core i5/i7)',
+                        'Monitor Only (HDMI / DP input for external player)',
+                        'Include PCAP 10-Point Touch Screen'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Specify OS, touch requirement, or software platform...',
                 ],
                 $base_volume
             ];

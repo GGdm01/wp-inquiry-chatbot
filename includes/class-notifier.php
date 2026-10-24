@@ -235,11 +235,24 @@ class WPI_Notifier {
      */
     public static function format_clean_label($q) {
         $q_lower = strtolower(trim($q, " :：\t\n\r\0\x0B?？"));
-        if (preg_match('/(structure|base|mounting|table|形态|结构|底座)/i', $q_lower)) return '桌体结构';
-        if (preg_match('/(feature|peripheral|object|waterproof|功能|识别|防水|外设)/i', $q_lower)) return '功能特性';
+        if (preg_match('/(hologram|showcase|fan|oled|pyramid|全息|展柜|风扇)/i', $q_lower)) return '展示形态';
+        if (preg_match('/(optical|tracking|lens|viewing|视角|光学|角度|追踪)/i', $q_lower)) return '光学视角';
+        if (preg_match('/(scenario|application|classroom|conference|meeting|用途|场景)/i', $q_lower)) return '应用场景';
+        if (preg_match('/(bonding|贴合)/i', $q_lower)) return '贴合工艺';
+        if (preg_match('/(bezel|seam|拼缝)/i', $q_lower)) return '单元拼缝';
+        if (preg_match('/(matrix|layout|array|拼接|阵列)/i', $q_lower)) return '拼接阵列';
+        if (preg_match('/(bracket|rack|支架)/i', $q_lower)) return '安装支架';
+        if (preg_match('/(processor|controller|signal|处理|信号)/i', $q_lower)) return '拼接处理';
+        if (preg_match('/(table|桌体|茶几)/i', $q_lower)) return '桌体结构';
+        if (preg_match('/(installation|enclosure|form_factor|structure|base|mounting|形态|结构|底座|安装)/i', $q_lower)) return '安装形态';
+        if (preg_match('/(brightness.*cooling|cooling.*brightness|亮度.*散热)/i', $q_lower)) return '亮度与散热';
+        if (preg_match('/(cooling|thermal|heat|散热|空调|风冷)/i', $q_lower)) return '散热方式';
+        if (preg_match('/(brightness|nits|高亮|亮度)/i', $q_lower)) return '屏幕亮度';
+        if (preg_match('/(waterproof|protection|ip65|ip66|防护|防水)/i', $q_lower)) return '防护等级';
         if (preg_match('/(touch|触控|触摸)/i', $q_lower)) return '触控方式';
-        if (preg_match('/(screen|size|尺寸)/i', $q_lower)) return '屏幕尺寸';
-        if (preg_match('/(os|android|windows|系统)/i', $q_lower)) return '操作系统';
+        if (preg_match('/(screen|size|dimension|尺寸)/i', $q_lower)) return '屏幕尺寸';
+        if (preg_match('/(feature|peripheral|object|外设|功能)/i', $q_lower)) return '功能特性';
+        if (preg_match('/(player|cms|os|android|windows|系统|播放)/i', $q_lower)) return '主控系统';
         if (preg_match('/(processor|ram|hardware|configuration|配置|硬件)/i', $q_lower)) return '配置要求';
         if (preg_match('/(quantity|volume|pcs|批量|采购量|数量)/i', $q_lower)) return '预估批量';
         if (preg_match('/(specs|drawing|model|需求|图纸)/i', $q_lower)) return '需求类型';
