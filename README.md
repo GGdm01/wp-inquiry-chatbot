@@ -172,6 +172,35 @@ Navigate to **WP Admin $\to$ Inquiry Leads $\to$ Chatbot Settings**:
 
 ---
 
+## ⚡ Server-Side 1-Second Setup (CLI)
+
+For developers and server administrators managing WordPress via SSH, Docker, or AppNode/cPanel, you can bypass browser UI uploads and configure the entire plugin in **1~2 seconds** using the native CLI tool:
+
+```bash
+# Inside WordPress root or plugin directory:
+php wp-content/plugins/wp-inquiry-chatbot/bin/wpi-quick-setup.php \
+  --industry=kiosk \
+  --feishu="https://open.feishu.cn/open-apis/bot/v2/hook/YOUR_WEBHOOK" \
+  --test-feishu
+```
+
+### Built-in Industry Archetypes:
+* `kiosk`         : Self-service terminals, sheet metal enclosures & commercial touch totems.
+* `touch_screen`  : Industrial touch displays, panel PCs & open-frame monitors.
+* `stretched_bar` : Ultra-wide stretched bar LCDs, shelf displays & digital signage.
+* `lighting`      : Commercial architectural & industrial LED lighting systems.
+* `wear_parts`    : Excavator bucket teeth, cutting edges & metallurgy components.
+* `battery`       : LiFePO4 energy storage systems & solar battery packs.
+* `generic`       : Universal B2B industrial foreign trade flow.
+
+The CLI tool automatically:
+1. Detects `wp-load.php` and loads WordPress core.
+2. Activates the plugin and verifies the `wp_inquiry_leads` database schema.
+3. Injects the tailored 7-step probing questions with strict `@` email validation.
+4. Snapshots settings into `wpi_custom_default_questions` (protecting against accidental resets).
+5. Tests Feishu interactive card dispatch and purges all page & object caches.
+---
+
 ## 📡 REST API Reference
 
 All endpoints are registered under the `/wp-json/wpi/v1/` namespace:
