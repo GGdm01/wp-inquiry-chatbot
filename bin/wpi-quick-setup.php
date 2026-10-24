@@ -54,6 +54,8 @@ if (isset($options['help'])) {
   --wp-path=<路径>       WordPress 安装根目录 (默认自动探测)
   --plugin-src=<目录>    指定本地插件代码源目录 (若指定则直接从该目录同步覆盖，秒级就位)
   --update               强制重新拉取最新版本覆盖现有插件
+  --industry=<行业>      注入行业专属 7 步提问预设 (严格包含首步 @ 邮箱门禁):
+                         • interactive_table: 智能触控茶几 / 会议触控桌 / 物体识别互动台
                          • kiosk         : 自助终端机 / 钣金工控柜 / 商用整机
                          • touch_screen  : 工业触控屏 / 工控一体机 / 嵌入式显示器
                          • stretched_bar : 条形液晶屏 / 数字标牌 / 货架长条屏
@@ -676,6 +678,73 @@ function get_archetype_questions($industry) {
                     ],
                     'required'    => false,
                     'placeholder' => 'List required certificates or warranty terms...',
+                ],
+                $base_volume
+            ];
+        case 'interactive_table':
+        case 'touch_table':
+            return [
+                [
+                    'id'               => 'name_email',
+                    'question'         => 'Hello, may I have your Name and Business Email to send the CAD drawings, table dimensions and wholesale quotation?',
+                    'type'             => 'name_email',
+                    'required'         => true,
+                    'require_at_email' => true,
+                    'prompt_error'     => 'Please provide a valid business email containing "@" (e.g. name@company.com) so we can send the drawings and quotation.',
+                    'placeholder'      => 'Your Name & Business Email with @...',
+                ],
+                $base_whatsapp,
+                [
+                    'id'          => 'table_structure',
+                    'question'    => 'Which table base structure or form factor best suits your venue?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'U-shaped base (Modern lounge / activity table)',
+                        'T-shaped base (Conference / office collaboration)',
+                        'Motorized Lifting table (Adjustable height / tilt)',
+                        'Coffee table with drawers / X-shaped base'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Select table style or describe custom structure...',
+                ],
+                [
+                    'id'          => 'interactive_features',
+                    'question'    => 'What interactive functions and surface protection do you need?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'IP65 Waterproof / Spill-proof tempered glass',
+                        'Object Recognition (Tangible interactive tokens / pucks)',
+                        'Multi-user PCAP touch (10 / 20 / 40 touch points)',
+                        'Integrated wireless phone chargers / power sockets'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Select key features or describe custom requirements...',
+                ],
+                [
+                    'id'          => 'screen_size',
+                    'question'    => 'What screen size and resolution do you prefer for your table?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        '43-inch 4K UHD (Most popular commercial size)',
+                        '55-inch 4K UHD (Spacious group collaboration)',
+                        '21.5" - 32" Full HD (Compact tea / lounge table)',
+                        '65" - 86" Large format (Exhibition / command center)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Select screen size or specify dimensions...',
+                ],
+                [
+                    'id'          => 'host_specs',
+                    'question'    => 'Which operating system and hardware configuration do you require?',
+                    'type'        => 'choice_or_text',
+                    'options'     => [
+                        'Android OS (Plug & Play, WiFi, App support)',
+                        'Windows 10/11 Pro (Core i5/i7 for 3D/Unity/Software)',
+                        'Monitor only (HDMI + USB touch for external PC)',
+                        'Dual OS (Windows + Android switchable)'
+                    ],
+                    'required'    => false,
+                    'placeholder' => 'Specify OS, CPU/RAM, or external PC connection...',
                 ],
                 $base_volume
             ];

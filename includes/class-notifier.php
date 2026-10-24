@@ -235,6 +235,8 @@ class WPI_Notifier {
      */
     public static function format_clean_label($q) {
         $q_lower = strtolower(trim($q, " :：\t\n\r\0\x0B?？"));
+        if (preg_match('/(structure|base|mounting|table|形态|结构|底座)/i', $q_lower)) return '桌体结构';
+        if (preg_match('/(feature|peripheral|object|waterproof|功能|识别|防水|外设)/i', $q_lower)) return '功能特性';
         if (preg_match('/(touch|触控|触摸)/i', $q_lower)) return '触控方式';
         if (preg_match('/(screen|size|尺寸)/i', $q_lower)) return '屏幕尺寸';
         if (preg_match('/(os|android|windows|系统)/i', $q_lower)) return '操作系统';

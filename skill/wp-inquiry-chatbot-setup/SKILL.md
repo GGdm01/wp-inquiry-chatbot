@@ -71,7 +71,7 @@ php wp-content/plugins/wp-inquiry-chatbot/bin/wpi-quick-setup.php \
 
 **参数支持：**
 * `--plugin-src=<目录>`：直接指定本地/服务器上的插件代码源目录，直接同步覆盖生效。
-* `--industry`：`kiosk` (自助终端整机), `touch_screen` (工业触控屏), `stretched_bar` (条形液晶屏), `lighting` (商业照明), `wear_parts` (机械耐磨件), `battery` (储能锂电), `generic` (工业通用)。
+* `--industry`：`interactive_table` (智能触控茶几/会议触控桌/展厅互动台), `kiosk` (自助终端整机), `touch_screen` (工业触控屏), `stretched_bar` (条形液晶屏), `lighting` (商业照明), `wear_parts` (机械耐磨件), `battery` (储能锂电), `generic` (工业通用)。
 * `--corpus=/path/to/custom.json`：直接指定自定义 7 步表单文件。
 * `--feishu` & `--secret`：飞书机器人 Webhook 与签名密钥。
 * `--test-feishu`：配置后立刻向外贸群推送交互卡片验证连通性。
