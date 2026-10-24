@@ -19,6 +19,10 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     color: var(--wpi-text);
 }
+/* Avoid overlapping with floating WhatsApp button if present */
+body:has(#zxtlcd-wa-float, #zxtlcd-wa-float-ds, .joinchat--right) .wpi-widget-container {
+    bottom: 90px;
+}
 
 /* Launcher Button */
 .wpi-launcher-btn {

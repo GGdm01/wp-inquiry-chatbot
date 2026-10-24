@@ -118,6 +118,11 @@
         if (!launcherBtn || !chatBox) {
             return;
         }
+        const widgetContainer = document.getElementById('wpi-widget');
+        const bottomOverlap = document.getElementById('zxtlcd-wa-float') || document.getElementById('zxtlcd-wa-float-ds') || document.querySelector('.joinchat--right');
+        if (bottomOverlap && widgetContainer) {
+            widgetContainer.style.bottom = '90px';
+        }
         quickSubmitBar  = document.getElementById('wpi-quick-submit-bar');
         quickSubmitBtn  = document.getElementById('wpi-quick-submit-btn');
         quickSubmitText = document.getElementById('wpi-quick-submit-text');
