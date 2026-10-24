@@ -36,6 +36,7 @@ $long_opts = [
     'secret::',
     'whatsapp::',
     'bot-name::',
+    'welcome::',
     'test-feishu',
     'clean-cache',
     'help',
@@ -824,10 +825,16 @@ update_option('wpi_custom_default_questions', $questions);
 update_option('wpi_custom_default_saved_at', current_time('mysql'));
 echo "  \033[1;32m✓\033[0m 已自动固化为「站点专属默认预设」 (wpi_custom_default_questions)，后续防误触丢失。\n";
 
-// 自动清除欢迎语中的 CAD 痕迹
-$curr_welcome = get_option('wpi_welcome_msg', '');
-if (empty($curr_welcome) || stripos($curr_welcome, 'CAD') !== false) {
-    update_option('wpi_welcome_msg', 'Hi! Looking for factory-direct wholesale prices or specifications for "{product_name}"?');
+// 欢迎语配置
+if (!empty($options['welcome'])) {
+    update_option('wpi_welcome_msg', trim($options['welcome']));
+    echo "  \033[1;32m✓\033[0m 欢迎语设置为: " . esc_html($options['welcome']) . "\n";
+} else {
+    // 自动清除欢迎语中的 CAD 痕迹
+    $curr_welcome = get_option('wpi_welcome_msg', '');
+    if (empty($curr_welcome) || stripos($curr_welcome, 'CAD') !== false) {
+        update_option('wpi_welcome_msg', 'Hi! Looking for factory-direct wholesale prices or specifications for "{product_name}"?');
+    }
 }
 
 // 客服称呼与 WhatsApp
